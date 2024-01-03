@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+  "ska_web",
+  "wasm",
+]
+
+[profile.release]
+lto = true
