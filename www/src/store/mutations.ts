@@ -5,6 +5,12 @@ import {
 } from "@/types";
 
 export default {
+    SET_WORKER(state: RootState, worker: Worker | null) {
+        state.workerState.worker = worker;
+    },
+    SET_WORKER_RESULT(state: RootState, result: string) {
+        state.workerState.workerResult = result;
+    },
     addError(state: RootState, payload: DatacinError) {
         state.errors.push(payload);
     },
