@@ -1,27 +1,25 @@
 import { RootState } from "@/store/state";
-import {
-    DatacinError,
-    Isolate,
-} from "@/types";
 
 export default {
     SET_WORKER(state: RootState, worker: Worker | null) {
         state.workerState.worker = worker;
     },
-    SET_WORKER_RESULT(state: RootState, result: string) {
+    set_worker_result(state: RootState, result: string) {
         state.workerState.workerResult = result;
     },
-    addError(state: RootState, payload: DatacinError) {
-        state.errors.push(payload);
+    addRef(state: RootState, name: string) {
+        console.log("vuex: Adding ref " + name);
+        state.refSet = name;
     },
-    addFile(state: RootState, name: string) {
+    addQueryFile(state: RootState, name: string) {
+        console.log("vuex: Adding file " + name)
         if (!state.allResults.mapResults[name]) {
             state.allResults.mapResults[name] = {
-                filename: name
+                mapped: false
             };
         }
     },
-    setIsolateResults(state: RootState, input: Isolate) {
-        state.allResults.mapResults[input.filename] = input
+    setMapped(state: RootState, input: string) {
+        state.allResults.mapResults[input].mapped = true
     },
 };

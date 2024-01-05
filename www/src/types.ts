@@ -1,39 +1,15 @@
 export type Dict<T> = Record<string, T>
 
-export interface State {
+export interface WorkerState {
     worker: Worker | null;
     workerResult: string | null;
 }
 
 export interface Isolate {
-    filename: string
-    mapping?: MapResults
+    mapped: boolean
 }
-
-export interface Coor {
-    position: number
-    base: string
-}
-
-// For testing
-export interface MapResults {
-    variants: Array<number>
-}
-
-/*
-export interface MapResults {
-    variants: Array<Coor>
-}
-*/
 
 export interface AllResults {
     mapResults: Dict<Isolate>
 }
-
-
-export interface DatacinError {
-    error: string,
-    detail?: string
-}
-
 

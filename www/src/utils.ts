@@ -1,8 +1,7 @@
 import { RootState } from "@/store/state";
-// import { WorkerMapper } from '@/workers/Mapper.worker.js';
 
 export const emptyState = (): RootState => ({
-    errors: [],
+    refSet: null,
     allResults: {
         mapResults: {},
     },

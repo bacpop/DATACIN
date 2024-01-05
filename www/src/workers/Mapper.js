@@ -1,34 +1,39 @@
 export class Mapper {
     worker;
     wasm;
-    ref;
+    SkaRef;
 
     constructor(worker) {
         this.worker = worker;
-        this.ref = null;
+        this.SkaRef = null;
         this.wasm = null;
-        import("@/pkg")
-            .then((w) => {
-                this.wasm = w;
-                this.worker.postMessage({ on_initialized: true });
-            });
+        this.wasmPromise = new Promise(resolve => {
+            import("@/pkg")
+                .then((w) => {
+                    this.wasm = w;
+                    resolve(w);
+                });
+        });
     }
 
-    set_ref(filename) {
-        if (this.wasm === null) {
-            throw new Error("Wasm is not initialized in SkaRef::new()");
+    waitForWasm() {
+        return this.wasm ? Promise.resolve(this.wasm) : this.wasmPromise;
+    }
+
+    async set_ref(filename) {
+        await this.waitForWasm();
+
+        if (this.SkaRef === null) {
+            this.SkaRef = this.wasm.SkaRef.new(filename);
         }
-        if (this.ref === null) {
-            this.ref = this.wasm.SkaRef.new(filename);
-        }
-        this.worker.postMessage("Ref set to " + this.ref);
+        this.worker.postMessage({ ref: filename });
     }
 
     map(filename) {
-        if (this.ref === null) {
+        if (this.SkaRef === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
-        this.worker.postMessage({ mapping: this.ref.map(filename) });
+        this.worker.postMessage({ mapping: this.SkaRef.map(filename) });
     }
 
 }

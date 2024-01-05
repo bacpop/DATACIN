@@ -1,11 +1,10 @@
 import {
-    DatacinError,
     AllResults,
-    State,
+    WorkerState,
 } from "@/types";
 
 export interface RootState {
-  errors: DatacinError[]
-  allResults: AllResults
-  workerState: State
+    refSet: string | null,
+    allResults: AllResults
+    workerState: WorkerState
 }
