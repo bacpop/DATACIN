@@ -1,15 +1,19 @@
 <template>
     <div>
-        <div v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
+        <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
             <input v-bind='getInputPropsRef()' />
             <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop your reference fasta file here,
-                or click to select</p>
+            <p v-else class="dropzone-text">Drag and drop your <em>reference</em> fasta file here,
+                or click to select a file</p>
+        </div>
+        <!-- dummy window after ref processed-->
+        <div v-if="refProcessed" class="dropzone dropzone-ref">
+            <p class="dropzone-text">✅ Reference picked and indexed: <span class="monospace">{{ refName }}</span></p>
         </div>
         <div v-if="refProcessed" v-bind='getRootPropsQuery()' class="dropzone dropzone-query">
             <input v-bind='getInputPropsQuery()' />
             <p v-if='isDragActiveQuery' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop other files to be mapped here,
+            <p v-else class="dropzone-text">Drag and drop read or assembly <em>files to be mapped</em> here,
                 or click to select files</p>
         </div>
         <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
@@ -69,8 +73,11 @@ export default {
     computed: {
         refProcessed() {
             return this.$store.getters.refProcessed;
+        },
+        refName() {
+            return this.$store.getters.refName;
+        }
     }
-}
 };
 </script>
 
@@ -84,18 +91,26 @@ export default {
     display: flex;
     align-items: center;
     border-radius: 4px;
-    background-color: rgb(159, 176, 190);
+    margin-bottom: 5px;
 }
 
 .dropzone-ref {
     height: 75px;
+    margin-top: 100px;
+    background-color: rgb(159, 176, 190);
 }
 
 .dropzone-query {
-    height: 300px;
+    height: 200px;
+    margin-top: 10px;
+    background-color: rgb(221, 249, 226);
 }
 
 .dropzone-text {
     padding: 30px;
+}
+
+.monospace {
+    font-family: 'Courier New', monospace;
 }
 </style>

@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+        <img src="datacin.png" alt="Datacin Logo" class="app-logo">
         <DropZone />
     </div>
 </template>
@@ -37,5 +38,12 @@ export default {
     text-align: center;
     color: #2c3e50;
     margin-top: 60px;
+}
+
+.app-logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 75px;
 }
 </style>
