@@ -6,7 +6,7 @@ const { defineConfig } = require('@vue/cli-service')
 
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 module.exports = defineConfig({
-    publicPath: '/vpm',
+    publicPath: '/',
     transpileDependencies: true,
     configureWebpack: {
         experiments: {
