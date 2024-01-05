@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "text-encoding": "^0.7.0",
     "vue": "^3.2.13",
     "vue-class-component": "^8.0.0-0",
     "vue3-dropzone": "^2.2.1",
