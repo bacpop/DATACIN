@@ -3,7 +3,7 @@
         <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
             <input v-bind='getInputPropsRef()' />
             <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop your <em>reference</em> fasta file here,
+            <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
                 or click to select a file</p>
         </div>
         <!-- dummy window after ref processed-->
@@ -13,7 +13,7 @@
         <div v-if="refProcessed" v-bind='getRootPropsQuery()' class="dropzone dropzone-query">
             <input v-bind='getInputPropsQuery()' />
             <p v-if='isDragActiveQuery' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop read or assembly <em>files to be mapped</em> here,
+            <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be mapped</b> here,
                 or click to select files</p>
         </div>
         <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
@@ -43,7 +43,7 @@ export default {
             ...restRef
         } = useDropzone({
             onDrop: onDropRef,
-            accept: [".fa", ".fasta", ".fa.gz", ".fasta.gz"],
+            accept: [".fa", ".fasta"],
             multiple: false
         });
         const {
@@ -53,7 +53,7 @@ export default {
             ...restQuery
         } = useDropzone({
             onDrop: onDropQuery,
-            accept: [".fa", ".fasta", ".fa.gz", ".fasta.gz", ".fastq.gz", "fq.gz"]
+            accept: [".fa", ".fasta", ".gz", ".fastq", ".fq"]
         });
 
         return {

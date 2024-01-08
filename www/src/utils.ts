@@ -7,6 +7,5 @@ export const emptyState = (): RootState => ({
     },
     workerState: {
         worker: null,
-        workerResult: null,
     },
 });

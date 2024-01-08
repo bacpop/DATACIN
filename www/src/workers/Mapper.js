@@ -29,11 +29,11 @@ export class Mapper {
         this.worker.postMessage({ ref: filename });
     }
 
-    map(filename) {
+    map(filename, revReadFile) {
         if (this.SkaRef === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
-        this.worker.postMessage({ mapping: this.SkaRef.map(filename) });
+        this.worker.postMessage({ mapping: this.SkaRef.map(filename, revReadFile) });
     }
 
 }
