@@ -21,7 +21,7 @@ module.exports = defineConfig({
             .init(
                 (Plugin) =>
                     new Plugin({
-                        crateDirectory: path.resolve(__dirname, "../rust/wasm"),
+                        crateDirectory: path.resolve(__dirname, "../rust"),
                         outDir: path.resolve(__dirname, "./src/pkg"),
                         forceMode: "development",
                         // forceMode: "production",

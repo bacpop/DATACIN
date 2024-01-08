@@ -1,5 +1,3 @@
-use ska_web::*;
-
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
@@ -47,4 +45,12 @@ impl SkaRef {
         log(&format!("Mapped file {} with return value {}", self.count, idx));
         vec![1; 10]
     }
+}
+
+pub fn idx_ref(ref_file: &str) -> usize {
+    0
+}
+
+pub fn map_to_ref(input_file: &str) -> usize {
+    1
 }
