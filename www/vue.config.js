@@ -23,7 +23,7 @@ module.exports = defineConfig({
                     new Plugin({
                         crateDirectory: path.resolve(__dirname, "../rust"),
                         outDir: path.resolve(__dirname, "./src/pkg"),
-                        forceMode: "development",
+                        // forceMode: "development",
                         // forceMode: "production",
                     })
             )

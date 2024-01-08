@@ -8,7 +8,7 @@
         </div>
         <!-- dummy window after ref processed-->
         <div v-if="refProcessed" class="dropzone dropzone-ref">
-            <p class="dropzone-text">✅ Reference picked and indexed: <span class="monospace">{{ refName }}</span></p>
+            <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
         </div>
         <div v-if="refProcessed" v-bind='getRootPropsQuery()' class="dropzone dropzone-query">
             <input v-bind='getInputPropsQuery()' />
