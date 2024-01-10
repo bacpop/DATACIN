@@ -18,6 +18,11 @@ wasm-bindgen-file-reader = "1"
 # ska
 seq_io = "0.3.2"
 flate2 = "1.0"
+ahash = "0.8.2"
+hashbrown = "0.12"
+
+[dependencies.getrandom]
+features = ["js"]
 
 [dependencies.web-sys]
 version = "0.3"

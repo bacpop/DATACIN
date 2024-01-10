@@ -1,0 +1,290 @@
+//! Encode and decode DNA bases into bit representation.
+//!
+//! The main functions are those to encode and decode bases, and get their
+//! reverse complement. Each bases uses two bits, and are packed into 64-bit
+//! integers.
+//!
+//! Easy encoding from ASCII are the 3rd and 2nd bits (works with both
+//! upper and lowercase)
+//!
+//! ```none
+//! This encodes as A: 00; C: 01; T: 10; G: 11
+//!
+//! EOR w/ 10          10     10     10     10
+//! gives rc           10     11     00     01
+//! ```
+//! (Same as used in GATB library)
+//!
+//! Ns/n are checked cheaply in a similar way
+//!
+//! There are also lookup tables to support ambiguity using IUPAC codes.
+
+use ahash::RandomState;
+use std::hash::{BuildHasher, Hasher};
+
+/// Table from bits 0-3 to ASCII (use [`decode_base()`] not this table).
+const LETTER_CODE: [u8; 4] = [b'A', b'C', b'T', b'G'];
+
+/// Encode an ASCII char to bits 0-3.
+#[inline(always)]
+pub fn encode_base(base: u8) -> u8 {
+    (base >> 1) & 0x3
+}
+
+/// Decode bits 0-3 to ASCII.
+#[inline(always)]
+pub fn decode_base(bitbase: u8) -> u8 {
+    LETTER_CODE[bitbase as usize]
+}
+
+/// Reverse complement an encoded base.
+#[inline(always)]
+pub fn rc_base(base: u8) -> u8 {
+    base ^ 2
+}
+
+/// Checks for N or n with ASCII input.
+#[inline(always)]
+pub fn valid_base(base: u8) -> bool {
+    base & 0xF != 14
+}
+
+/// Checks for A, C, G, T/U or gap with ASCII input
+#[inline(always)]
+pub fn is_ambiguous(mut base: u8) -> bool {
+    base |= 0x20; // to lower
+    !matches!(base, b'a' | b'c' | b'g' | b't' | b'u' | b'-')
+}
+
+/// Convert an ASCII base into a probability vector
+/// [p(A), p(C), p(T), p(G)]
+pub fn base_to_prob(base: u8) -> [f64; 4] {
+    match base {
+        //      (A    C    T    G  )
+        b'A' => [1.0, 0.0, 0.0, 0.0],
+        b'C' => [0.0, 1.0, 0.0, 0.0],
+        b'G' => [0.0, 0.0, 0.0, 1.0],
+        b'T' | b'U' => [0.0, 0.0, 1.0, 0.0],
+        b'R' => [0.5, 0.0, 0.0, 0.5],
+        b'Y' => [0.0, 0.5, 0.5, 0.0],
+        b'S' => [0.0, 0.5, 0.0, 0.5],
+        b'W' => [0.5, 0.0, 0.5, 0.0],
+        b'K' => [0.0, 0.0, 0.5, 0.5],
+        b'M' => [0.5, 0.5, 0.0, 0.0],
+        b'B' => [0.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0],
+        b'D' => [1.0 / 3.0, 0.0, 1.0 / 3.0, 1.0 / 3.0],
+        b'H' => [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0, 0.0],
+        b'V' => [1.0 / 3.0, 1.0 / 3.0, 0.0, 1.0 / 3.0],
+        b'N' => [0.25, 0.25, 0.25, 0.25],
+        _ => [0.0, 0.0, 0.0, 0.0],
+    }
+}
+
+pub fn rev_comp(mut kmer: u128, k_size: usize) -> u128 {
+    // This part reverses the bases by shuffling them using an on/off pattern
+    // of bits
+    kmer = (kmer >> 2 & 0x33333333333333333333333333333333)
+        | (kmer & 0x33333333333333333333333333333333) << 2;
+    kmer = (kmer >> 4 & 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F)
+        | (kmer & 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F) << 4;
+    kmer = (kmer >> 8 & 0x00FF00FF00FF00FF00FF00FF00FF00FF)
+        | (kmer & 0x00FF00FF00FF00FF00FF00FF00FF00FF) << 8;
+    kmer = (kmer >> 16 & 0x0000FFFF0000FFFF0000FFFF0000FFFF)
+        | (kmer & 0x0000FFFF0000FFFF0000FFFF0000FFFF) << 16;
+    kmer = (kmer >> 32 & 0x00000000FFFFFFFF00000000FFFFFFFF)
+        | (kmer & 0x00000000FFFFFFFF00000000FFFFFFFF) << 32;
+    kmer = (kmer >> 64 & 0x0000000000000000FFFFFFFFFFFFFFFF)
+        | (kmer & 0x0000000000000000FFFFFFFFFFFFFFFF) << 64;
+    // This reverse complements
+    kmer ^= 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+
+    // Shifts so LSB is at the bottom
+    kmer >> (2 * (64 - k_size))
+}
+
+#[inline(always)]
+pub fn generate_masks(k: usize) -> (u128, u128) {
+    let half_size: usize = (k - 1) / 2;
+    let lower_mask: u128 = (1 << (half_size * 2)) - 1;
+    let upper_mask: u128 = lower_mask << (half_size * 2);
+    (lower_mask, upper_mask)
+}
+
+pub fn hash_val(kmer: u128, hash_fn: &RandomState) -> u64 {
+    let mut hasher = hash_fn.build_hasher();
+    hasher.write_u128(kmer);
+    hasher.finish()
+}
+
+// A 	Adenine
+// C 	Cytosine
+// G 	Guanine
+// T (or U) 	Thymine (or Uracil)
+// R 	A or G
+// Y 	C or T
+// S 	G or C
+// W 	A or T
+// K 	G or T
+// M 	A or C
+// B 	C or G or T
+// D 	A or G or T
+// H 	A or C or T
+// V 	A or C or G
+// N 	any base
+// . or - 	gap
+
+// A + A -> A   C + A -> M   T + A -> W   G + A -> R
+// A + C -> M   C + C -> C   T + C -> Y   G + C -> S
+// A + G -> R   C + G -> S   T + G -> K   G + G -> G
+// A + T -> W   C + T -> Y   T + T -> T   G + T -> K
+// A + R -> R   C + R -> V   T + R -> D   G + R -> R
+// A + Y -> H   C + Y -> Y   T + Y -> Y   G + Y -> B
+// A + S -> V   C + S -> S   T + S -> B   G + S -> S
+// A + W -> W   C + W -> H   T + W -> W   G + W -> D
+// A + K -> D   C + K -> B   T + K -> K   G + K -> K
+// A + M -> M   C + M -> M   T + M -> H   G + M -> V
+// A + B -> N   C + B -> B   T + B -> B   G + B -> B
+// A + D -> D   C + D -> N   T + D -> D   G + D -> D
+// A + H -> H   C + H -> H   T + H -> H   G + H -> N
+// A + V -> V   C + V -> V   T + V -> N   G + V -> V
+// A + N -> N   C + N -> N   T + N -> N   G + N -> N
+
+/// Lookup table to return an ambiguity code by adding a new base to an existing code.
+///
+/// Table is indexed as `[existing_base, new_base]` where `new_base` is two-bit encoded
+/// and `existing_base` is ASCII/`u8`. Returns ASCII/`u8` IUPAC code.
+///
+/// Table is flattened and row-major i.e. strides are `(1, 256)`.
+///
+/// # Examples
+///
+/// ```
+/// use ska::ska_dict::bit_encoding::{encode_base, IUPAC};
+///
+/// // A + Y -> H
+/// let new_base = encode_base(b'A');
+/// let existing_base = b'Y';
+/// // Returns b'H'
+/// let updated_base = IUPAC[new_base as usize * 256 + existing_base as usize];
+/// ```
+pub const IUPAC: [u8; 1024] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0-15
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 16-31
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 32-47
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 48-63
+    0, b'A', b'N', b'M', b'D', 0, 0, b'R', b'H', 0, 0, b'D', 0, b'M', b'N', 0, // 64-79
+    0, 0, b'R', b'V', b'W', 0, b'V', b'W', 0, b'H', 0, 0, 0, 0, 0, 0, // 80-95
+    0, b'A', b'N', b'M', b'D', 0, 0, b'R', b'H', 0, 0, b'D', 0, b'M', b'N', 0, // 96-111
+    0, 0, b'R', b'V', b'W', 0, b'V', b'W', 0, b'H', 0, 0, 0, 0, 0, 0, // 112-127
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 128-143
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 144-159
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160-175
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 176-191
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192-207
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208-223
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224-239
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 240-255
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0-15
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 16-31
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 32-47
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 48-63
+    0, b'M', b'B', b'C', b'N', 0, 0, b'S', b'H', 0, 0, b'B', 0, b'M', b'N', 0, // 64-79
+    0, 0, b'V', b'S', b'Y', 0, b'V', b'H', 0, b'Y', 0, 0, 0, 0, 0, 0, // 80-95
+    0, b'M', b'B', b'C', b'N', 0, 0, b'S', b'H', 0, 0, b'B', 0, b'M', b'N', 0, // 96-111
+    0, 0, b'V', b'S', b'Y', 0, b'V', b'H', 0, b'Y', 0, 0, 0, 0, 0, 0, // 112-127
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 128-143
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 144-159
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160-175
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 176-191
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192-207
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208-223
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224-239
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //240-255
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0-15
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 16-31
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 32-47
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 48-63
+    0, b'W', b'B', b'Y', b'D', 0, 0, b'K', b'H', 0, 0, b'K', 0, b'H', b'N', 0, // 64-79
+    0, 0, b'D', b'B', b'T', 0, b'N', b'W', 0, b'Y', 0, 0, 0, 0, 0, 0, // 80-95
+    0, b'W', b'B', b'Y', b'D', 0, 0, b'K', b'H', 0, 0, b'K', 0, b'H', b'N', 0, // 96-111
+    0, 0, b'D', b'B', b'T', 0, b'N', b'W', 0, b'Y', 0, 0, 0, 0, 0, 0, // 112-127
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 128-143
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 144-159
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160-175
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 176-191
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192-207
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208-223
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224-239
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //240-255
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0-15
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 16-31
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 32-47
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 48-63
+    0, b'R', b'B', b'S', b'D', 0, 0, b'G', b'N', 0, 0, b'K', 0, b'V', b'N', 0, // 64-79
+    0, 0, b'R', b'S', b'K', 0, b'V', b'D', 0, b'B', 0, 0, 0, 0, 0, 0, // 80-95
+    0, b'R', b'B', b'S', b'D', 0, 0, b'G', b'N', 0, 0, b'K', 0, b'V', b'N', 0, // 96-111
+    0, 0, b'R', b'S', b'K', 0, b'V', b'D', 0, b'B', 0, 0, 0, 0, 0, 0, // 112-127
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 128-143
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 144-159
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160-175
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 176-191
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192-207
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208-223
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224-239
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+]; //240-255
+
+// IUPAC UInt
+// A -> T
+// C -> G
+// G -> C
+// T -> A
+// U -> A
+// R -> Y
+// Y -> R
+// S -> S
+// W -> W
+// K -> M
+// M -> K
+// B -> V
+// D -> H
+// H -> D
+// V -> B
+// N -> N
+// - -> -
+
+/// Lookup table which gives reverse complement of a single IUPAC code (ASCII/`u8`).
+pub const RC_IUPAC: [u8; 256] = [
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 0-15
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 16-31
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 32-47
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 48-63
+    b'-', b'T', b'V', b'G', b'H', b'-', b'-', b'C', b'D', b'-', b'-', b'M', b'-', b'K', b'N',
+    b'-', // 64-79
+    b'-', b'-', b'Y', b'S', b'A', b'-', b'B', b'W', b'-', b'R', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 80-95
+    b'-', b'T', b'V', b'G', b'H', b'-', b'-', b'C', b'D', b'-', b'-', b'M', b'-', b'K', b'N',
+    b'-', // 96-111
+    b'-', b'-', b'Y', b'S', b'A', b'-', b'B', b'W', b'-', b'R', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 112-127
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 128-143
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 144-159
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 160-175
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 176-191
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 192-207
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 208-223
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 224-239
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 240-255
+];

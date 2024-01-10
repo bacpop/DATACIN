@@ -5,7 +5,7 @@ export class Mapper {
 
     constructor(worker) {
         this.worker = worker;
-        this.SkaRef = null;
+        this.SkaData = null;
         this.wasm = null;
         this.wasmPromise = new Promise(resolve => {
             import("@/pkg")
@@ -20,20 +20,20 @@ export class Mapper {
         return this.wasm ? Promise.resolve(this.wasm) : this.wasmPromise;
     }
 
-    async set_ref(filename) {
+    async set_ref(file) {
         await this.waitForWasm();
 
-        if (this.SkaRef === null) {
-            this.SkaRef = this.wasm.SkaRef.new(filename);
+        if (this.SkaData === null) {
+            this.SkaData = this.wasm.SkaData.new(file);
         }
-        this.worker.postMessage({ ref: filename });
+        this.worker.postMessage({ ref: file });
     }
 
-    map(filename, revReadFile) {
-        if (this.SkaRef === null) {
+    map(file, revReadFile) {
+        if (this.SkaData === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
-        this.worker.postMessage({ mapping: this.SkaRef.map(filename, revReadFile) });
+        this.worker.postMessage({ mapping: this.SkaData.map(file, revReadFile) });
     }
 
 }
