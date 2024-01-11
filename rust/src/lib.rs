@@ -10,9 +10,10 @@ pub mod ska_dict;
 pub mod ska_map;
 use crate::ska_map::SkaMap;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum QualFilter {
     /// Ignore quality scores in reads
+    #[default]
     NoFilter,
     /// Filter middle bases below quality threshold
     Middle,
@@ -21,6 +22,7 @@ pub enum QualFilter {
 }
 
 /// Quality filtering options for FASTQ files
+#[derive(Copy, Clone, Debug, Default)]
 pub struct QualOpts {
     /// Minimum k-mer count across reads to be added
     pub min_count: u16,
@@ -66,11 +68,17 @@ impl SkaData {
         Self {reference, mapped: Vec::new()}
     }
 
-    pub fn map(&mut self, input_file: String, rev_reads: Option<String>) -> Vec<usize> {
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) {
+        // TODO - fastqs and two files
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
-        todo!();
+        let mut wf1= WebSysFile::new(input_file);
+        if let Some(second_file) = rev_reads {
+            self.mapped.push(SkaMap::new(&self.reference, &mut wf1, Some(&mut WebSysFile::new(second_file))));
+        } else {
+            self.mapped.push(SkaMap::new(&self.reference, &mut wf1, None));
+        };
     }
 }
 

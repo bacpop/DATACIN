@@ -50,6 +50,8 @@ pub struct SkaDict {
     split_kmers: HashMap<u128, u8>,
     /// A bloom filter for counting from fastq files
     kmer_filter: KmerFilter,
+    qual_opts: QualOpts,
+    is_reads: bool,
 }
 
 impl SkaDict
@@ -96,7 +98,7 @@ impl SkaDict
 
     /// Iterates through all the k-mers from an input fastx file and adds them
     /// to the dictionary
-    fn add_file_kmers<F: Read>(&mut self, file: &mut F, is_reads: bool, qual: &QualOpts) {
+    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F) {
         // TODO: deal with fastq (is_reads)
         let mut reader = open_fasta(file);
         while let Some(record) = reader.next() {
@@ -107,12 +109,12 @@ impl SkaDict
                 None,
                 self.k,
                 self.rc,
-                qual.min_qual,
-                qual.qual_filter,
-                is_reads,
+                self.qual_opts.min_qual,
+                self.qual_opts.qual_filter,
+                self.is_reads,
             );
             if let Some(mut kmer_it) = kmer_opt {
-                if !is_reads
+                if !self.is_reads
                     || (kmer_it.middle_base_qual()
                         && Ordering::is_eq(self.kmer_filter.filter(&kmer_it)))
                 {
@@ -124,7 +126,7 @@ impl SkaDict
                     }
                 }
                 while let Some((kmer, base, _rc)) = kmer_it.get_next_kmer() {
-                    if !is_reads
+                    if !self.is_reads
                         || (kmer_it.middle_base_qual()
                             && Ordering::is_eq(self.kmer_filter.filter(&kmer_it)))
                     {
@@ -183,8 +185,7 @@ impl SkaDict
     pub fn new<F: Read>(
         k: usize,
         sample_idx: usize,
-        file1: &mut F,
-        file2: Option<&mut F>,
+        input_file: &mut F,
         name: &str,
         rc: bool,
         qual: &QualOpts,
@@ -200,9 +201,12 @@ impl SkaDict
             name: name.to_string(),
             split_kmers: HashMap::default(),
             kmer_filter: KmerFilter::new(qual.min_count),
+            qual_opts: *qual,
+            is_reads: false,
         };
 
         // TODO Check if we're working with reads, and initalise the CM filter if so
+        // and self.is_reads
         /*
         let mut reader_peek =
             parse_fastx_file(files.0).unwrap_or_else(|_| panic!("Invalid path/file: {}", files.0));
@@ -218,11 +222,7 @@ impl SkaDict
         */
 
         // Build the dict
-        let is_reads = false;
-        sk_dict.add_file_kmers(file1, is_reads, qual);
-        if let Some(second_filename) = file2 {
-            sk_dict.add_file_kmers(second_filename, is_reads, qual);
-        }
+        sk_dict.add_file_kmers(input_file);
 
         if sk_dict.ksize() == 0 {
             panic!("File has no valid sequence");

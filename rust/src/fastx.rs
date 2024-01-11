@@ -6,6 +6,9 @@ use flate2::read::MultiGzDecoder;
 
 const GZ_MAGIC: [u8; 2] = [0x1F, 0x8B];
 
+// TODO -- would be nice to improve this so the fasta/fastq is transparent
+// like gzipped/not. See https://github.com/onecodex/needletail/blob/master/src/parser/mod.rs
+
 pub enum ReaderEnum<'a, F: Read + 'a> {
     Plain(Chain<Cursor<[u8; 2]>, &'a mut F>),
     Gzipped(MultiGzDecoder<Chain<Cursor<[u8; 2]>, &'a mut F>>),

@@ -34,7 +34,9 @@ pub struct RefKmer {
 pub struct RefSka
 {
     /// k-mer size
-    k: usize,
+    pub k: usize,
+    /// reverse complement,
+    pub rc: bool,
     /// Concatenated list of split k-mers
     split_kmer_pos: Vec<RefKmer>,
     /// Replace ambiguous bases with N
@@ -45,6 +47,8 @@ pub struct RefSka
     seq: Vec<Vec<u8>>,
     /// Where repeats should be masked with 'N'
     repeat_coors: Vec<usize>,
+    /// Iterator index
+    index: usize,
 }
 
 impl RefSka {
@@ -155,16 +159,22 @@ impl RefSka {
 
         Self {
             k,
+            rc,
             seq,
             ambig_mask,
             chrom_names,
             split_kmer_pos,
             repeat_coors,
+            index: 0,
         }
     }
 
     pub fn nk(&self) -> usize {
         self.split_kmer_pos.len()
+    }
+
+    pub fn kmer_iter(&self) -> impl Iterator<Item = &RefKmer> + '_ {
+        self.split_kmer_pos.iter()
     }
 
     // Keeps track of split k-mers in the ref, any found before are moved
