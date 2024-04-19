@@ -6,6 +6,7 @@ export interface WorkerState {
 
 export interface Isolate {
     mapped: boolean
+    nb_variants?: number | null
 }
 
 export interface AllResults {

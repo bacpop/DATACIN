@@ -33,4 +33,8 @@ impl SkaMap {
         }
         Self { mapped_bases }
     }
+
+    pub fn mapped_bases(&self) -> &Vec<Variant> {
+        &self.mapped_bases
+    }
 }

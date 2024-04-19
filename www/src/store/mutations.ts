@@ -12,11 +12,13 @@ export default {
         console.log("vuex: Adding query file " + name)
         if (!state.allResults.mapResults[name]) {
             state.allResults.mapResults[name] = {
-                mapped: false
+                mapped: false,
+                nb_variants: null
             };
         }
     },
-    setMapped(state: RootState, input: string) {
-        state.allResults.mapResults[input].mapped = true
+    setMapped(state: RootState, input: [string, number|null]) {
+        state.allResults.mapResults[input[0]].mapped = true
+        state.allResults.mapResults[input[0]].nb_variants = input[1]
     },
 };

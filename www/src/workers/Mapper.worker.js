@@ -9,7 +9,7 @@ import { Mapper } from './Mapper.js';
                 mapper.set_ref(evt.data.file);
 
             } else if (evt.data.map) {
-                mapper.map(evt.data.filename, evt.data.revReads);
+                mapper.map(evt.data.file, evt.data.revReads);
 
             } else {
                 throw "Event " + JSON.stringify(evt.data) + " is not supported";
