@@ -53,7 +53,7 @@ export default {
                     state.workerState.worker.postMessage(messageData);
                     state.workerState.worker.onmessage = (message) => {
                         console.log("Mapping result :" + message.data.mapping);
-                        commit("setMapped", [messageData.sampleName, message.data.mapping]);
+                        commit("setMapped", [message.data.name, message.data.mapping]);
                     };
                 }
             }

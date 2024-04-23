@@ -104,7 +104,7 @@ impl<'a> SplitKmer<'a> {
                 match i.cmp(&middle_idx) {
                     Ordering::Greater => {
                         lower <<= 2;
-                        lower |= (next_base as u128);
+                        lower |= next_base as u128;
                     }
                     Ordering::Less => {
                         upper <<= 2;
