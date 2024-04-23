@@ -33,7 +33,7 @@ export class Mapper {
         if (this.SkaData === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
-        this.worker.postMessage({ mapping: this.SkaData.map(file, revReadFile), name: file.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz)$/, '')});
+        this.worker.postMessage({ mapping: this.SkaData.map(file, revReadFile), name: file.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz|fq|fq.gz|fastq|fastq.gz|_1.fq.gz|_1.fastq.gz)$/, '')});
     }
 
 }
