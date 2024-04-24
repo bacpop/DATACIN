@@ -16,12 +16,12 @@
 //! know how many you will be merging, which will let you use [`crate::merge_ska_dict::MergeSkaDict::merge()`].
 //! Otherwise you will need to use the slower [`crate::merge_ska_dict::MergeSkaDict::extend()`]
 
-use std::io::Read;
 use std::cmp::Ordering;
+use std::io::Read;
 
 use hashbrown::HashMap;
 
-use crate::fastx::open_fasta;
+use crate::fastx::{open_fasta, open_fastq};
 
 pub mod split_kmer;
 use super::QualOpts;
@@ -35,6 +35,11 @@ use crate::ska_dict::bloom_filter::KmerFilter;
 
 pub mod nthash;
 
+use crate::fastx::ReaderEnum;
+use seq_io::fasta::Reader as FastaReader;
+use seq_io::fasta::Record as FastaRecord;
+use seq_io::fastq::Reader as FastqReader;
+use seq_io::fastq::Record as FastqRecord;
 /// Holds the split-kmer dictionary, and basic information such as k-mer size.
 #[derive(Debug, Clone, Default)]
 pub struct SkaDict {
@@ -54,8 +59,8 @@ pub struct SkaDict {
     is_reads: bool,
 }
 
-impl SkaDict
-{
+
+impl SkaDict {
     /// Adds a split-kmer and middle base to dictionary.
     fn add_to_dict(&mut self, kmer: u128, base: u8) {
         self.split_kmers
@@ -96,16 +101,51 @@ impl SkaDict
             });
     }
 
+
     /// Iterates through all the k-mers from an input fastx file and adds them
     /// to the dictionary
-    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F) {
-        // TODO: deal with fastq (is_reads)
-        let mut reader = open_fasta(file);
-        while let Some(record) = reader.next() {
-            let seqrec = record.expect("Invalid FASTA/Q record");
+    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str) {
+
+        enum ReaderType<'a, F: Read + 'a> {
+            Fasta(FastaReader<ReaderEnum<'a, F>>), // replace with actual type
+            Fastq(FastqReader<ReaderEnum<'a, F>>), // replace with actual type
+        }
+
+        let mut reader;
+
+        if ["fasta", "fa", "fa.gz", "fasta.gz"].contains(&file_type) {
+            reader = ReaderType::Fasta(open_fasta(file));
+        } else if ["fastq", "fq", "fq.gz", "fastq.gz"].contains(&file_type) {
+            reader = ReaderType::Fastq(open_fastq(file));
+        } else {
+            panic!("Unsupported file type")
+        }
+
+        while let Some((seq, seq_len)) = match reader {
+            ReaderType::Fasta(ref mut r) => {
+                if let Some(record) = r.next(){
+                    let seqrec = record.expect("Invalid FASTA record");
+                    let seq: Vec<u8> = seqrec.seq().to_vec();
+                    let seq_len = seq.len();
+                    Some((seq, seq_len))
+                } else {
+                    None
+                }
+            }
+            ReaderType::Fastq(ref mut r) => {
+                if let Some(record) = r.next(){
+                    let seqrec = record.expect("Invalid FASTQ record");
+                    let seq: Vec<u8> = seqrec.seq().to_vec();
+                    let seq_len = seq.len();
+                    Some((seq, seq_len))
+                } else {
+                    None
+                }
+            }
+        } {
             let kmer_opt = SplitKmer::new(
-                seqrec.full_seq(),
-                seqrec.full_seq().len(),
+                seq,
+                seq_len,
                 None,
                 self.k,
                 self.rc,
@@ -140,7 +180,6 @@ impl SkaDict
             }
         }
     }
-
     /// Build a split-kmer dictionary from input fastx file(s)
     ///
     /// Prefer to use [`crate::merge_ska_dict::build_and_merge()`] over this
@@ -189,6 +228,7 @@ impl SkaDict
         name: &str,
         rc: bool,
         qual: &QualOpts,
+        file_type: &str,
     ) -> Self {
         if !(5..=63).contains(&k) || k % 2 == 0 {
             panic!("Invalid k-mer length");
@@ -222,7 +262,7 @@ impl SkaDict
         */
 
         // Build the dict
-        sk_dict.add_file_kmers(input_file);
+        sk_dict.add_file_kmers(input_file, file_type);
 
         if sk_dict.ksize() == 0 {
             panic!("File has no valid sequence");

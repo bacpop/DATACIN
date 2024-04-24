@@ -1,9 +1,8 @@
-
 use std::io::Read;
 
-use seq_io::fasta::Record;
 use hashbrown::hash_set::Entry::*;
 use hashbrown::HashSet;
+use seq_io::fasta::Record;
 
 use super::{log, QualFilter};
 use crate::fastx::open_fasta;
@@ -31,8 +30,7 @@ pub struct RefKmer {
 ///
 /// After running [`RefSka::map()`] against a [`MergeSkaDict`] mapped middle
 /// bases and positions will also be populated.
-pub struct RefSka
-{
+pub struct RefSka {
     /// k-mer size
     pub k: usize,
     /// reverse complement,
@@ -52,7 +50,13 @@ pub struct RefSka
 }
 
 impl RefSka {
-    pub fn new<F: Read>(k: usize, file: &mut F, rc: bool, ambig_mask: bool, repeat_mask: bool) -> Self {
+    pub fn new<F: Read>(
+        k: usize,
+        file: &mut F,
+        rc: bool,
+        ambig_mask: bool,
+        repeat_mask: bool,
+    ) -> Self {
         let mut reader = open_fasta(file);
 
         if !(5..=63).contains(&k) || k % 2 == 0 {
@@ -72,8 +76,8 @@ impl RefSka {
             split_kmer_pos.reserve(seqrec.full_seq().len());
 
             let kmer_opt = SplitKmer::new(
-                seqrec.full_seq(),
-                seqrec.full_seq().len(),
+                seqrec.seq().to_vec(),
+                seqrec.seq().len(),
                 None,
                 k,
                 rc,
@@ -152,8 +156,8 @@ impl RefSka {
                 log(&format!(
                     "Masking {} unique split k-mer repeats spanning {} bases",
                     repeats.len(),
-                    repeat_coors.len())
-                );
+                    repeat_coors.len()
+                ));
             }
         }
 

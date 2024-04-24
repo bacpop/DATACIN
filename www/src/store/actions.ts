@@ -43,7 +43,7 @@ export default {
                     }
                 }
             } else {
-                messageData.sampleName = file.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz)$/, '');
+                messageData.sampleName = file.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz|.fq|.fastq)$/, '');
                 sendJob = true;
             }
 

@@ -1,8 +1,7 @@
-
-use std::io::{self, Cursor, Read, Chain};
+use flate2::read::MultiGzDecoder;
 use seq_io::fasta::Reader as FastaReader;
 use seq_io::fastq::Reader as FastqReader;
-use flate2::read::MultiGzDecoder;
+use std::io::{self, Chain, Cursor, Read};
 
 const GZ_MAGIC: [u8; 2] = [0x1F, 0x8B];
 
@@ -25,7 +24,7 @@ impl<'a, F: Read + 'a> Read for ReaderEnum<'a, F> {
 
 pub fn open_fasta<'a, F>(file_in: &'a mut F) -> FastaReader<ReaderEnum<'a, F>>
 where
-    F: Read + 'a
+    F: Read + 'a,
 {
     let mut first_two_bytes = [0; 2];
     file_in
@@ -38,13 +37,13 @@ where
             let gz_reader = MultiGzDecoder::new(new_reader);
             FastaReader::new(ReaderEnum::Gzipped(gz_reader))
         }
-        _ => FastaReader::new(ReaderEnum::Plain(new_reader))
+        _ => FastaReader::new(ReaderEnum::Plain(new_reader)),
     }
 }
 
 pub fn open_fastq<'a, F>(file_in: &'a mut F) -> FastqReader<ReaderEnum<'a, F>>
 where
-    F: Read + 'a
+    F: Read + 'a,
 {
     let mut first_two_bytes = [0; 2];
     file_in
@@ -57,6 +56,6 @@ where
             let gz_reader = MultiGzDecoder::new(new_reader);
             FastqReader::new(ReaderEnum::Gzipped(gz_reader))
         }
-        _ => FastqReader::new(ReaderEnum::Plain(new_reader))
+        _ => FastqReader::new(ReaderEnum::Plain(new_reader)),
     }
 }

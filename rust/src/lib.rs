@@ -1,4 +1,3 @@
-
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_file_reader::WebSysFile;
 extern crate console_error_panic_hook;
@@ -63,24 +62,38 @@ impl SkaData {
 
         let mut wf = WebSysFile::new(ref_file);
         let reference = RefSka::new(k, &mut wf, rc, ambig_mask, repeat_mask);
-        log(&format!("Indexed reference: {} split k-mers", reference.nk()));
+        log(&format!(
+            "Indexed reference: {} split k-mers",
+            reference.nk()
+        ));
 
-        Self {reference, mapped: Vec::new()}
+        Self {
+            reference,
+            mapped: Vec::new(),
+        }
     }
 
-    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> usize{
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> usize {
         // TODO - fastqs and two files
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
-        let mut wf1= WebSysFile::new(input_file);
+        let file_name = input_file.name();
+        let file_type = file_name.split('.').nth(1).unwrap();
+        let mut wf1 = WebSysFile::new(input_file);
+
         if let Some(second_file) = rev_reads {
-            self.mapped.push(SkaMap::new(&self.reference, &mut wf1, Some(&mut WebSysFile::new(second_file))));
+            self.mapped.push(SkaMap::new(
+                &self.reference,
+                &mut wf1,
+                Some(&mut WebSysFile::new(second_file)),
+                file_type,
+            ));
         } else {
-            self.mapped.push(SkaMap::new(&self.reference, &mut wf1, None));
+            self.mapped
+                .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
         };
         // show self.mapped
-        return self.mapped[self.mapped.len()-1].mapped_bases().len();
+        return self.mapped[self.mapped.len() - 1].mapped_bases().len();
     }
 }
-
