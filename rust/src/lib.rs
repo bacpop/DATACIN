@@ -73,7 +73,7 @@ impl SkaData {
         }
     }
 
-    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> usize {
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> Vec<usize> {
         // TODO - fastqs and two files
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
@@ -93,7 +93,11 @@ impl SkaData {
             self.mapped
                 .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
         };
-        // show self.mapped
-        return self.mapped[self.mapped.len() - 1].mapped_bases().len();
+        let mut results: Vec<usize> = Vec::new();
+
+        results.push(self.mapped[self.mapped.len() - 1].mapped_bases().len());
+        results.push(self.reference.len());
+
+        return results;
     }
 }

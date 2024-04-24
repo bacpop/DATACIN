@@ -52,8 +52,9 @@ export default {
                 if (state.workerState.worker) {
                     state.workerState.worker.postMessage(messageData);
                     state.workerState.worker.onmessage = (message) => {
-                        console.log("Mapping result :" + message.data.mapping);
-                        commit("setMapped", [message.data.name, message.data.mapping]);
+                        console.log("Mapping variants :" + message.data.nb_variants);
+                        console.log("Mapping coverage :" + message.data.coverage);
+                        commit("setMapped", [message.data.name, message.data.nb_variants, message.data.coverage]);
                     };
                 }
             }

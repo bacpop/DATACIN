@@ -193,4 +193,8 @@ impl RefSka {
             }
         }
     }
+
+    pub fn len(&self) -> usize {
+        self.seq.iter().map(|x| x.len()).sum()
+    }
 }

@@ -19,7 +19,7 @@
         <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
         <div v-if="queryProcessed" class="variants" style="text-align:left; margin-left:10px"> 
             <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
-                File: {{filename}} → Number of variants detected: {{ allResults.mapResults[filename]["nb_variants"] !== null ? allResults.mapResults[filename]["nb_variants"] : 'Not mapped' }} 
+                File: {{filename}} → Number of variants detected: {{ allResults.mapResults[filename]["nb_variants"] !== null ? allResults.mapResults[filename]["nb_variants"] : 'Not mapped' }}, coverage: {{ allResults.mapResults[filename]["coverage"] !== undefined ? Math.round(allResults.mapResults[filename]["coverage"]*100) + "%" : 'Not mapped' }}
             </li>
         </div>
     </div>
