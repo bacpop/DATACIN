@@ -197,4 +197,8 @@ impl RefSka {
     pub fn len(&self) -> usize {
         self.seq.iter().map(|x| x.len()).sum()
     }
+
+    pub fn get_seq(&self) ->  &Vec<Vec<u8>> {
+        &self.seq
+    }
 }

@@ -7,9 +7,9 @@ use crate::QualOpts;
 
 #[derive(Debug, Clone, Default)]
 pub struct Variant {
-    chrom: usize,
-    pos: usize,
-    base: u8,
+    pub chrom: usize,
+    pub pos: usize,
+    pub base: u8,
 }
 
 #[derive(Debug, Clone, Default)]
