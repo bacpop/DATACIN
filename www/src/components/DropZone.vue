@@ -17,11 +17,6 @@
                 or click to select files</p>
         </div>
         <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
-        <div v-if="queryProcessed" class="variants" style="text-align:left; margin-left:10px"> 
-            <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
-                {{allResults.mapResults[filename]["nb_variants"] !== null ? "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" : 'Loading...' }}
-            </li>
-        </div>
     </div>
 </template>
 
@@ -81,9 +76,6 @@ export default {
         },
         refName() {
             return this.$store.getters.refName;
-        },
-        queryProcessed() {
-            return this.$store.getters.queryProcessed;
         }
     }
 };
