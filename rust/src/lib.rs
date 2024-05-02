@@ -9,6 +9,8 @@ pub mod ska_dict;
 pub mod ska_map;
 use crate::ska_map::SkaMap;
 
+use json;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum QualFilter {
     /// Ignore quality scores in reads
@@ -73,7 +75,7 @@ impl SkaData {
         }
     }
 
-    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> Vec<usize> {
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> String {
         // TODO - fastqs and two files
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
@@ -93,11 +95,12 @@ impl SkaData {
             self.mapped
                 .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
         };
-        let mut results: Vec<usize> = Vec::new();
+        let mut results = json::JsonValue::new_array();
 
-        results.push(self.mapped[self.mapped.len() - 1].mapped_bases().len());
-        results.push(self.reference.len());
 
-        return results;
+        results["Number of variants"] = self.mapped[self.mapped.len() - 1].mapped_bases().len().into();
+        results["Coverage"] = (self.mapped[self.mapped.len() - 1].mapped_bases().len() as f64 / self.reference.len() as f64).into();
+  
+        return results.dump();
     }
 }
