@@ -8,9 +8,9 @@ export default {
         acceptFiles.forEach((file: File) => {
             if (state.workerState.worker) {
                 state.workerState.worker.postMessage({ref: true, file});
-                state.workerState.worker.onmessage = () => {
-                    console.log(file.name + " has been indexed");
-                    commit("addRef", file.name);
+                state.workerState.worker.onmessage = (messageData) => {
+                    console.log(messageData.data.ref.name + " has been indexed");
+                    commit("addRef", {name: messageData.data.ref.name, sequences:messageData.data.sequences});
                 };
             }
         });
@@ -52,9 +52,9 @@ export default {
                 if (state.workerState.worker) {
                     state.workerState.worker.postMessage(messageData);
                     state.workerState.worker.onmessage = (message) => {
-                        console.log("Mapping variants :" + message.data.nb_variants);
-                        console.log("Mapping coverage :" + message.data.coverage);
-                        commit("setMapped", [message.data.name, message.data.nb_variants, message.data.coverage]);
+                        console.log("Mapping variants: " + message.data.nb_variants);
+                        console.log("Mapping coverage: " + message.data.coverage);
+                        commit("setMapped", message.data);
                     };
                 }
             }

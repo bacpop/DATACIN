@@ -47,6 +47,7 @@ pub fn init_panic_hook() {
 #[wasm_bindgen]
 pub struct SkaData {
     reference: RefSka,
+    reference_string: Vec<String>,
     mapped: Vec<SkaMap>,
 }
 
@@ -68,9 +69,11 @@ impl SkaData {
             "Indexed reference: {} split k-mers",
             reference.nk()
         ));
+        let reference_string = reconstruct_sequence(&reference);
 
         Self {
             reference,
+            reference_string,
             mapped: Vec::new(),
         }
     }
@@ -95,33 +98,21 @@ impl SkaData {
             self.mapped
                 .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
         };
-
         let mut results = json::JsonValue::new_array();
 
         results["Number of variants"] = self.mapped[self.mapped.len() - 1].mapped_bases().len().into();
         results["Coverage"] = (self.mapped[self.mapped.len() - 1].mapped_bases().len() as f64 / self.reference.len() as f64).into();
-        results["Sequence"] = json::JsonValue::new_array();
-        results["Mapping"] = json::JsonValue::new_array();
+        results["Mapped sequences"] = json::JsonValue::new_array();
 
-        let sequences = self.reconstruct_sequence();
         let mut original_seqs_length = Vec::new();
-        for sequence in sequences.clone() {
+        for sequence in self.reference_string.clone() {
             original_seqs_length.push(sequence.len());
         }
         let mapping = self.reconstruct_mapping(original_seqs_length);
 
-        for (i, sequence) in sequences.iter().enumerate() {
-            results["Sequence"][i] = sequence.clone().into();
-        }
-
         for (i, sequence) in mapping.iter().enumerate() {
-            results["Mapping"][i] = sequence.clone().into();
+            results["Mapped sequences"][i] = sequence.clone().into();
         }
-        
-        log(&format!(
-            "Mapping {:?}",
-            mapping
-        ));
 
         return results.dump();
     }
@@ -131,9 +122,9 @@ impl SkaData {
         let mut sequences: Vec<String> = Vec::new();
         let mut current_seq: String = "".to_string();
 
-        for (i, variant) in self.mapped[self.mapped.len() - 1].mapped_bases().iter().enumerate() {
+        for variant in self.mapped[self.mapped.len() - 1].mapped_bases() {
             if variant.chrom != current_chrom {
-                for _ in current_seq.len()..original_seqs_length[i] {
+                for _ in current_seq.len()..original_seqs_length[current_chrom] {
                     current_seq.push('-');
                 }
                 sequences.push(current_seq);
@@ -152,21 +143,25 @@ impl SkaData {
         return sequences;
     }
 
-    pub fn reconstruct_sequence(&self) -> Vec<String> {
-        let sequence_u8 = self.reference.get_seq();
-        let mut sequence_string = Vec::new();
-
-        for sequence in sequence_u8 {
-            let mut current_seq= "".to_string();
-            for base in sequence {
-                if *base != 10 {
-                    current_seq.push(*base as char);
-                }
-                
-            }
-            sequence_string.push(current_seq);
-        }
-
-        return sequence_string;
+    pub fn get_reference(&self) -> String {
+        return self.reference_string.join("\n");
     }
+}
+
+pub fn reconstruct_sequence(reference: &RefSka) -> Vec<String> {
+    let sequence_u8 = reference.get_seq();
+    let mut sequence_string = Vec::new();
+
+    for sequence in sequence_u8 {
+        let mut current_seq= "".to_string();
+        for base in sequence {
+            if *base != 10 {
+                current_seq.push(*base as char);
+            }
+            
+        }
+        sequence_string.push(current_seq);
+    }
+
+    return sequence_string;
 }
