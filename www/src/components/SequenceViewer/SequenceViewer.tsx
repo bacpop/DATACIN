@@ -41,7 +41,7 @@ export default defineComponent({
         const rowVirtualizer = useVirtualizer({
             count: rows.length,
             getScrollElement: () => parentRef.value,
-            estimateSize: () => (3 + rows[0].mapped_sequence.length)  * Number(font_size),
+            estimateSize: () => (3.5 + rows[0].mapped_sequence.length)  * Number(font_size),
             overscan: 5,
         });
 

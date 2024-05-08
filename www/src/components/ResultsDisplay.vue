@@ -8,8 +8,10 @@
             </li>
         </div>
         <div v-else>
-            <input type="checkbox" id="skip" v-model="skip"/>
-            <label for="skip">Skip unmapped sequences</label>
+            <div v-if="zoom>8">
+                <input type="checkbox" id="skip" v-model="skip"/>
+                <label for="skip">Skip unmapped sequences</label>
+            </div>
             <VueSlider 
                 v-model="zoom" 
                 :lazy="true" 

@@ -18,7 +18,6 @@ export default {
     methods: {
         createSequenceViewer() {
             const { allResults } = useState(["allResults"]);
-            console.log("allResults", allResults);
 
             const whole_sequences = allResults.value.ref;
 
@@ -31,7 +30,6 @@ export default {
                     whole_mapped_sequences_chrom[i].push(allResults.value.mapResults[key].mapped_sequences[i]);
                 }
             }
-            console.log("whole_mapped_sequences_chrom", whole_mapped_sequences_chrom);
 
             const nb_mapping = whole_mapped_sequences_chrom[0].length;
 
@@ -40,7 +38,6 @@ export default {
                 length_sequence += seq.length;
             }
             const nb_chrom = whole_sequences.length;
-            console.log("nb_chrom", nb_chrom);
 
             const width = document.body.clientWidth - 20;
             const totalWidth = width * this.zoom_level;
