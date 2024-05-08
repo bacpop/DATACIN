@@ -4,7 +4,9 @@
         <label for="visualisation">See visualisation</label>
         <div v-if="!visualisation">
             <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
-                {{allResults.mapResults[filename]["nb_variants"] !== null ? "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" : 'Loading...' }}
+                {{allResults.mapResults[filename]["nb_variants"] !== null ? 
+                        "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" 
+                        : 'Loading...' }}
             </li>
         </div>
         <div v-else>
@@ -26,13 +28,13 @@
                 <SequenceViewer 
                     :zoom_level="zoom"
                     :no_skip="skip"
-                    :key="use_keys(zoom, skip)">
+                    :key="use_keys(zoom, skip)"> <!-- Reactivity on zoom and skip changes -->
                 </SequenceViewer>
             </div>
             <div v-else>
                 <MinimisedSequenceViewer 
                     :zoom_level="zoom"
-                    :key="zoom">
+                    :key="zoom"> <!-- Reactivity on zoom changes -->
                 </MinimisedSequenceViewer>
             </div>
         </div>  

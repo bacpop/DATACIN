@@ -1,20 +1,31 @@
+// This file contains the functions to construct the rows of the sequence viewer
+// This is done to adapt the width of the webpage and use the virtualizer
+
+// The Row class is used to store the information of a row of the sequence viewer
+// It is returned to the component to be displayed
 export class Row {
     sequence: string[];
-    mapped_sequence: string[][];
+    mapped_sequences: string[][];
     font_widths: number[];
-    nucleotides_numbers: number[];
+    nucleotides_position: number[];
     first_row: number;
 
-    constructor(sequence: string[], mapped_sequence: string[][], font_widths: number[], nucleotides_numbers: number[], first_row: number = 0) {
+    constructor(sequence: string[], mapped_sequences: string[][], font_widths: number[], nucleotides_position: number[], first_row: number = 0) {
         this.sequence = sequence;
-        this.mapped_sequence = mapped_sequence;
-        this.font_widths = font_widths;
-        this.nucleotides_numbers = nucleotides_numbers;
-        this.first_row = first_row;
+        this.mapped_sequences = mapped_sequences;
+        this.font_widths = font_widths; // The width allocated to each caracter of the sequence (letter, -, space or .......)
+        this.nucleotides_position = nucleotides_position;
+        this.first_row = first_row; // Is it the first row of the chromosome ? If yes, this is the number of the chromosome
     }
 }
 
-export function Rows(font_size: Number, font_family: string, whole_mapped_sequences_chrom: string[][], whole_sequences: string[], no_skip: boolean, mapping_names: string[]) {
+export function Rows(
+    font_size: Number, 
+    font_family: string, 
+    whole_mapped_sequences_chrom: string[][], 
+    whole_sequences: string[], no_skip: boolean, 
+    mapping_names: string[]) 
+    {
     const nb_mapping = whole_mapped_sequences_chrom[0].length;
 
     const width_page = document.body.clientWidth - 20;
@@ -22,7 +33,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
     let sequence: string[];
     let mapped_sequences: string[][];
     let font_widths: number[];
-    let nucleotides_numbers: number[];
+    let nucleotides_position: number[];
     const font_width = getTextWidth(font_size, font_family);
     
     const Rows = [];
@@ -30,9 +41,13 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
 
     let nucleotide = "";
     const nucleotide_mapped: string[] = [];
+    // While the sequence is not mapped by any mapping, we skip it
     let skip = false;
+    // We want to add additionnal information to the first row of each chromosome
     let first_row;
 
+    // We go through each chromosome, skip unmapped sequences (or not if no_skip is true) and construct the
+    // rows using the Row class
     for (let seq_i = 0; seq_i < whole_sequences.length; seq_i++){
         sequence = [];
         mapped_sequences = [];
@@ -40,7 +55,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
             mapped_sequences.push([]);
         }
         font_widths = [];
-        nucleotides_numbers = [];
+        nucleotides_position = [];
 
         first_row = seq_i + 1;
         const text_widths = [];
@@ -59,7 +74,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
                     sequence, 
                     mapped_sequences, 
                     font_widths, 
-                    nucleotides_numbers,
+                    nucleotides_position,
                     first_row
                 ));
                 sequence = [];
@@ -68,7 +83,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
                     mapped_sequences.push([]);
                 }
                 font_widths = [];
-                nucleotides_numbers = [];
+                nucleotides_position = [];
 
                 first_row = 0;
                 current_width = 0;
@@ -78,14 +93,13 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
 
             if (whole_mapped_sequences.every(mapped_sequence => mapped_sequence[i] == "-") && !no_skip) {
                 if (!skip) {
-
                     if (current_width + font_width > width_page - 40) {
                         current_width = 0;
                         Rows.push(new Row(
                             sequence, 
                             mapped_sequences, 
                             font_widths, 
-                            nucleotides_numbers
+                            nucleotides_position
                         ));
                         sequence = [];
                         mapped_sequences = [];
@@ -93,7 +107,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
                             mapped_sequences.push([]);
                         }
                         font_widths = [];
-                        nucleotides_numbers = [];
+                        nucleotides_position = [];
                     }
                     
                     nucleotide = ".......";
@@ -104,7 +118,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
                     current_width += font_width_skip;
 
                     font_widths.push(font_width_skip);
-                    nucleotides_numbers.push(1);
+                    nucleotides_position.push(1); // We don't care about the number of the dots and 1 is not divisible by anything else than himself
                     sequence.push(nucleotide);
                     for (let j = 0; j < nb_mapping; j++){
                         mapped_sequences[j].push(nucleotide_mapped[j]);
@@ -131,7 +145,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
 
             current_width += font_width;
             font_widths.push(font_width);
-            nucleotides_numbers.push(i + 1);
+            nucleotides_position.push(i + 1);
             sequence.push(nucleotide);
             for (let j = 0; j < nb_mapping; j++){
                 mapped_sequences[j].push(nucleotide_mapped[j]);
@@ -141,7 +155,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
             sequence,
             mapped_sequences,
             font_widths,
-            nucleotides_numbers,
+            nucleotides_position,
             first_row
         ));
         first_row = 0;
@@ -151,6 +165,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
     return Rows;
 }
 
+// This function is used to compute the width of a text given a font size and a font family
 function getTextWidth(font_size: Number, font_family: string, text = "G") {  
     const inputText = text; 
     const font = font_size + "px " + font_family; 

@@ -1,3 +1,6 @@
+// A .tsx is a file that allows you to use JSX syntax in TypeScript files.
+// JSX allows the user to write html and return it as a vue component.
+
 import { defineComponent } from "vue";
 import { useState } from "vuex-composition-helpers";
 import SingleRow from './SingleRow.vue'
@@ -12,7 +15,7 @@ export default defineComponent({
         zoom_level: {
             type: Number,
         },
-        no_skip: {
+        no_skip: {    // Defines whether or not we show all sequences, even if they are not mapped
             type: Boolean,
             default: false,
         },
@@ -37,11 +40,14 @@ export default defineComponent({
         const font_family = "Arial";
         const font_size: Number = zoom_level.value ? zoom_level.value : 10;
 
+        // Compute the rows before displaying them to adapt to the width of the webpage and use the virtualizer
         const rows: Row[] = Rows(font_size, font_family, whole_mapped_sequences_chrom, whole_sequences, props.no_skip, Object.keys(allResults.value.mapResults));
+
+        // A virtualizer is a component that allows you to render only the elements that are visible on the screen
         const rowVirtualizer = useVirtualizer({
             count: rows.length,
             getScrollElement: () => parentRef.value,
-            estimateSize: () => (3.5 + rows[0].mapped_sequence.length)  * Number(font_size),
+            estimateSize: () => (3.5 + rows[0].mapped_sequences.length)  * Number(font_size),
             overscan: 5,
         });
 
@@ -66,7 +72,12 @@ export default defineComponent({
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }
                                 },
-                                [h(SingleRow, { virtualRow, row: rows[virtualRow.index], font_size: font_size, font_family: font_family, mapping_names: Object.keys(allResults.value.mapResults) })])
+                                // Use the custom SingleRow component to display each row one by one
+                                [h(SingleRow, { virtualRow, 
+                                                row: rows[virtualRow.index], 
+                                                font_size: font_size, 
+                                                font_family: font_family, 
+                                                mapping_names: Object.keys(allResults.value.mapResults) })])
                             );
                         })
                     ])
