@@ -5,8 +5,25 @@
 <script>
 import * as d3 from 'd3';
 
+function getTextWidth(font_size, font_family, text = "G") {  
+    const inputText = text; 
+    const font = font_size + "px " + font_family; 
+    
+    const canvas = document.createElement("canvas"); 
+    const context = canvas.getContext("2d"); 
+    if (context) {
+        context.font = font; 
+    }
+    else {
+        return 0;
+    }
+    
+    const width = context?.measureText(inputText).width; 
+    return width;
+}
+
 export default {
-    props: ['virtualRow', 'row', 'font_size', 'font_family'],
+    props: ['virtualRow', 'row', 'font_size', 'font_family', 'mapping_names'],
     mounted() {
         this.modifySvg();
     },
@@ -20,7 +37,39 @@ export default {
             let nucleotides_numbers = this.row.nucleotides_numbers;
             let nb_mapping = mapped_sequence.length;
 
-            let x = 20 + font_widths[0]/2;
+            let x;
+            if (this.row.first_row != 0) {
+                let text_widths = [];
+                text_widths.push(getTextWidth(this.font_size, this.font_family, "Reference"));
+                for (let j = 0; j < nb_mapping; j++){
+                    text_widths.push(getTextWidth(this.font_size, this.font_family, this.mapping_names[j]));
+                }
+                x = 20 + 1.1*Math.max(...text_widths) + font_widths[0]/2;
+
+                svg.append("text")
+                   .attr("x", 20)
+                   .attr("y", this.font_size)
+                   .attr("font-size", this.font_size + "px")
+                   .attr("text-anchor", "left")
+                   .attr("font-family", this.font_family)
+                   .text("Chromosome " + this.row.first_row);
+                
+                for (let j = 0; j < nb_mapping; j++){
+                    svg.append("text")
+                       .attr("x", 20)
+                       .attr("y", (2 + j) * this.font_size)
+                       .attr("font-size", this.font_size + "px")
+                       .attr("fill", "red")
+                       .attr("text-anchor", "left")
+                       .attr("font-family", this.font_family)
+                       .text(this.mapping_names[j]);
+                }
+            }
+            else {
+                x = 20 + font_widths[0]/2;
+            }
+            const initial_x = x;
+            const initial_font_width = font_widths[0];
 
             let nucleotide = "";
             let nucleotide_mapped = "";
@@ -80,7 +129,7 @@ export default {
                 current_font_width = font_widths[i];
             }
             svg.append("line")
-                .attr("x1", 20)
+                .attr("x1", initial_x - initial_font_width/2)
                 .attr("y1", (1.5 + nb_mapping) * this.font_size)
                 .attr("x2", x - font_widths[sequence.length - 1]/2)
                 .attr("y2", (1.5 + nb_mapping) * this.font_size)

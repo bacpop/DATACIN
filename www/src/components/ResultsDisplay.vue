@@ -1,13 +1,15 @@
 <template>
     <div v-if="queryProcessed" class="variants" style="text-align:left; margin-left:10px"> 
-        <input type="checkbox" id="checkbox" v-model="checked"/>
-        <label for="checkbox">See visualisation</label>
-        <div v-if="!checked">
+        <input type="checkbox" id="visualisation" v-model="visualisation"/>
+        <label for="visualisation">See visualisation</label>
+        <div v-if="!visualisation">
             <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
                 {{allResults.mapResults[filename]["nb_variants"] !== null ? "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" : 'Loading...' }}
             </li>
         </div>
         <div v-else>
+            <input type="checkbox" id="skip" v-model="skip"/>
+            <label for="skip">Skip unmapped sequences</label>
             <VueSlider 
                 v-model="zoom" 
                 :lazy="true" 
@@ -20,7 +22,8 @@
             </VueSlider>
             <SequenceViewer 
                 :zoom_level="zoom"
-                :key="zoom">
+                :no_skip="skip"
+                :key="use_keys(zoom, skip)">
             </SequenceViewer>
         </div>  
     </div>
@@ -40,22 +43,31 @@ export default {
     },
     setup() {
         const { allResults } = useState(["allResults"]);
-        const checked = ref(null);
+        const visualisation = ref(false);
+        const skip = ref(false);
 
         return {
             allResults,
-            checked
-        };
+            visualisation,
+            skip
+        }
     },
+
     computed: {
         queryProcessed() {
             return this.$store.getters.queryProcessed;
         }
     },
+
+    methods: {
+        use_keys(key1, key2) {
+            return `${key1}-${key2}`
+        }
+    },
     
     data() {
         return {
-        zoom: 5
+        zoom: 10
         }
     },
 };

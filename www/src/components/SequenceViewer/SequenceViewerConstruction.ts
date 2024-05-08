@@ -3,16 +3,18 @@ export class Row {
     mapped_sequence: string[][];
     font_widths: number[];
     nucleotides_numbers: number[];
+    first_row: number;
 
-    constructor(sequence: string[], mapped_sequence: string[][], font_widths: number[], nucleotides_numbers: number[]) {
+    constructor(sequence: string[], mapped_sequence: string[][], font_widths: number[], nucleotides_numbers: number[], first_row: number = 0) {
         this.sequence = sequence;
         this.mapped_sequence = mapped_sequence;
         this.font_widths = font_widths;
         this.nucleotides_numbers = nucleotides_numbers;
+        this.first_row = first_row;
     }
 }
 
-export function Rows(font_size: Number, font_family: string, whole_mapped_sequences_chrom: string[][], whole_sequences: string[]) {
+export function Rows(font_size: Number, font_family: string, whole_mapped_sequences_chrom: string[][], whole_sequences: string[], no_skip: boolean, mapping_names: string[]) {
     const nb_mapping = whole_mapped_sequences_chrom[0].length;
 
     const width_page = document.body.clientWidth - 20;
@@ -29,6 +31,7 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
     let nucleotide = "";
     const nucleotide_mapped: string[] = [];
     let skip = false;
+    let first_row;
 
     for (let seq_i = 0; seq_i < whole_sequences.length; seq_i++){
         sequence = [];
@@ -39,19 +42,25 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
         font_widths = [];
         nucleotides_numbers = [];
 
-        current_width = 0;
+        first_row = seq_i + 1;
+        const text_widths = [];
+        text_widths.push(getTextWidth(font_size, font_family, "Chromosome 1"));
+        for (let j = 0; j < nb_mapping; j++){
+            text_widths.push(getTextWidth(font_size, font_family, mapping_names[j]));
+        }
+        current_width = 1.1*Math.max(...text_widths);
 
         const whole_sequence = whole_sequences[seq_i];
         const whole_mapped_sequences: string[] = whole_mapped_sequences_chrom[seq_i];
 
         for (let i = 0; i < whole_sequence.length; i++) {
             if (current_width + font_width > width_page - 40) {
-                current_width = 0;
                 Rows.push(new Row(
                     sequence, 
                     mapped_sequences, 
                     font_widths, 
-                    nucleotides_numbers
+                    nucleotides_numbers,
+                    first_row
                 ));
                 sequence = [];
                 mapped_sequences = [];
@@ -60,11 +69,14 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
                 }
                 font_widths = [];
                 nucleotides_numbers = [];
+
+                first_row = 0;
+                current_width = 0;
             }
 
             nucleotide = whole_sequence[i];
 
-            if (whole_mapped_sequences.every(mapped_sequence => mapped_sequence[i] == "-")) {
+            if (whole_mapped_sequences.every(mapped_sequence => mapped_sequence[i] == "-") && !no_skip) {
                 if (!skip) {
 
                     if (current_width + font_width > width_page - 40) {
@@ -129,8 +141,11 @@ export function Rows(font_size: Number, font_family: string, whole_mapped_sequen
             sequence,
             mapped_sequences,
             font_widths,
-            nucleotides_numbers
+            nucleotides_numbers,
+            first_row
         ));
+        first_row = 0;
+        current_width = 0;
     }
 
     return Rows;

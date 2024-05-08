@@ -12,9 +12,13 @@ export default defineComponent({
         zoom_level: {
             type: Number,
         },
+        no_skip: {
+            type: Boolean,
+            default: false,
+        },
     },
     
-    setup(props: { zoom_level: Number | undefined }){
+    setup(props: { zoom_level: Number | undefined, no_skip: boolean}){
         const { allResults } = useState(["allResults"]);
         const whole_sequences: string[] = allResults.value.ref;
 
@@ -31,9 +35,9 @@ export default defineComponent({
         const zoom_level = ref(props.zoom_level);
 
         const font_family = "Arial";
-        const font_size: Number = zoom_level.value ? zoom_level.value : 12;
+        const font_size: Number = zoom_level.value ? zoom_level.value : 10;
 
-        const rows: Row[] = Rows(font_size, font_family, whole_mapped_sequences_chrom, whole_sequences);
+        const rows: Row[] = Rows(font_size, font_family, whole_mapped_sequences_chrom, whole_sequences, props.no_skip, Object.keys(allResults.value.mapResults));
         const rowVirtualizer = useVirtualizer({
             count: rows.length,
             getScrollElement: () => parentRef.value,
@@ -62,14 +66,12 @@ export default defineComponent({
                                         transform: `translateY(${virtualRow.start}px)`,
                                     }
                                 },
-                                [h(SingleRow, { virtualRow, row: rows[virtualRow.index], font_size: font_size, font_family: font_family })])
+                                [h(SingleRow, { virtualRow, row: rows[virtualRow.index], font_size: font_size, font_family: font_family, mapping_names: Object.keys(allResults.value.mapResults) })])
                             );
                         })
                     ])
                 ])
             );
         };
-    },
-
-    
+    },    
 });
