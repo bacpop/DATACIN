@@ -40,7 +40,7 @@ export default {
             let x;
             if (this.row.first_row != 0) {
                 let text_widths = [];
-                text_widths.push(getTextWidth(this.font_size, this.font_family, "Reference"));
+                text_widths.push(getTextWidth(this.font_size, this.font_family, "Chromosome " + this.row.first_row));
                 for (let j = 0; j < nb_mapping; j++){
                     text_widths.push(getTextWidth(this.font_size, this.font_family, this.mapping_names[j]));
                 }
