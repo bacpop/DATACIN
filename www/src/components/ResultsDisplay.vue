@@ -20,11 +20,19 @@
                 style="margin: 10px 0"
                 >
             </VueSlider>
-            <SequenceViewer 
-                :zoom_level="zoom"
-                :no_skip="skip"
-                :key="use_keys(zoom, skip)">
-            </SequenceViewer>
+            <div v-if="zoom>8">
+                <SequenceViewer 
+                    :zoom_level="zoom"
+                    :no_skip="skip"
+                    :key="use_keys(zoom, skip)">
+                </SequenceViewer>
+            </div>
+            <div v-else>
+                <MinimisedSequenceViewer 
+                    :zoom_level="zoom"
+                    :key="zoom">
+                </MinimisedSequenceViewer>
+            </div>
         </div>  
     </div>
 </template>
@@ -34,12 +42,14 @@ import { useState } from "vuex-composition-helpers";
 import { ref } from "vue";
 import SequenceViewer from "./SequenceViewer/SequenceViewer.tsx";
 import VueSlider from 'vue-3-slider-component'
+import MinimisedSequenceViewer from "./MinimisedSequenceViewer/MinimisedSequenceViewer.vue";
 
 export default {
     name: "ResultsDisplay",
     components: {
         SequenceViewer,
-        VueSlider
+        VueSlider,
+        MinimisedSequenceViewer
     },
     setup() {
         const { allResults } = useState(["allResults"]);
