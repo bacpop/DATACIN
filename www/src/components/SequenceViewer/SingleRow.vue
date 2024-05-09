@@ -4,23 +4,7 @@
 
 <script>
 import * as d3 from 'd3';
-
-function getTextWidth(font_size, font_family, text = "G") {  
-    const inputText = text; 
-    const font = font_size + "px " + font_family; 
-    
-    const canvas = document.createElement("canvas"); 
-    const context = canvas.getContext("2d"); 
-    if (context) {
-        context.font = font; 
-    }
-    else {
-        return 0;
-    }
-    
-    const width = context?.measureText(inputText).width; 
-    return width;
-}
+import { getTextWidth } from '../functions';
 
 export default {
     props: ['virtualRow', 'row', 'font_size', 'font_family', 'mapping_names'],
