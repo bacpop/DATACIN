@@ -48,11 +48,12 @@ export default {
 
             const width = document.body.clientWidth - 20;
             const totalWidth = width * this.zoom_level;
-            const height = Math.min(...[nb_mapping* 80, 420]);
+            const height = Math.min(...[nb_mapping* 40, 420]);
+            const totalHeight = height + 30;
             const marginTop = 10;
             const marginRight = 20;
             const marginBottom = 3;
-            const marginLeft = 1.3*Math.max(...text_widths);
+            const marginLeft = 1.1*Math.max(...text_widths);
             const tickFrequency = Math.round(length_sequence/totalWidth*100/10**orderOfMagnitude(length_sequence/70))*10**orderOfMagnitude(length_sequence/70);
 
             // Create the horizontal (x) scale over the total width.
@@ -73,7 +74,7 @@ export default {
             // Create the svg with the vertical axis. 
             let legend = parent.append("svg")
                 .attr("width", width)
-                .attr("height", height)
+                .attr("height", totalHeight)
                 .style("position", "absolute")
                 .style("pointer-events", "none")
                 .style("z-index", 1)
@@ -85,6 +86,7 @@ export default {
                     .attr("y", y(i) + 30 - (height - marginBottom - marginTop) / nb_mapping / 2)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
+                    .style("font-size", "12px")
                     .text(mapping_names[i]);
             }
 
