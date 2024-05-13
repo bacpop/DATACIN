@@ -48,15 +48,16 @@ export default {
 
             const width = document.body.clientWidth - 20;
             const totalWidth = width * this.zoom_level;
-            const height = Math.min(...[nb_mapping* 100, 420]);
-            const marginTop = 20;
+            const height = Math.min(...[nb_mapping* 80, 420]);
+            const marginTop = 10;
             const marginRight = 20;
-            const marginBottom = 30;
-            const marginLeft = 1.1*Math.max(...text_widths);
+            const marginBottom = 3;
+            const marginLeft = 1.3*Math.max(...text_widths);
+            const tickFrequency = Math.round(length_sequence/totalWidth*100/10**orderOfMagnitude(length_sequence/70))*10**orderOfMagnitude(length_sequence/70);
 
             // Create the horizontal (x) scale over the total width.
             const x = d3.scaleLinear()
-                .domain([0, length_sequence + (nb_chrom - 1) * whole_sequences[0].length/30])
+                .domain([0, length_sequence + (nb_chrom - 1) * whole_sequences[0].length/5])
                 .range([marginLeft, totalWidth - marginRight]);
 
             // Create the vertical (y) scale.
@@ -87,7 +88,7 @@ export default {
                     .text(mapping_names[i]);
             }
 
-            // Create a scrolling div containing the area shape and the horizontal axis. 
+            // Create the scrolling div 
             const body = parent.append("div")
                 .style("overflow-x", "scroll")
                 .style("-webkit-overflow-scrolling", "touch");
@@ -100,13 +101,13 @@ export default {
             // Plot rectangles for each chromosome with a text inside
             for (let chr_i = 0; chr_i < nb_chrom; chr_i++) {
                 chr_svg.append("rect")
-                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/30))
+                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
                     .attr("y", 0)
-                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/30) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/30))
+                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
                     .attr("height", 30)
                     .attr("fill", "lightgrey");
                 chr_svg.append("text")
-                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/30))
+                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
                     .attr("y", 15)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
@@ -138,9 +139,9 @@ export default {
                         }
                         else {
                             svg.append("rect")
-                                .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/30))
+                                .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/5))
                                 .attr("y", y(map_i+1))
-                                .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/30) - x(current_nucleotide + chr_i * whole_sequences[0].length/30))
+                                .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/5) - x(current_nucleotide + chr_i * whole_sequences[0].length/5))
                                 .attr("height", y(map_i) - y(map_i + 1))
                                 .attr("fill", current_is_equal ? "black" : "red");
                             current_nucleotide = nucleotide_count;
@@ -149,14 +150,50 @@ export default {
                         nucleotide_count += 1;
                     }
                     svg.append("rect")
-                        .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/30))
+                        .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/5))
                         .attr("y", y(map_i+1))
-                        .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/30) - x(current_nucleotide + chr_i * whole_sequences[0].length/30))
+                        .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/5) - x(current_nucleotide + chr_i * whole_sequences[0].length/5))
                         .attr("height", y(map_i) - y(map_i + 1))
                         .attr("fill", current_is_equal ? "black" : "red");
+                }
+            }
+
+            // Create the horizontal axis.
+            const xAxis = body.append("svg")
+                .attr("width", totalWidth)
+                .attr("height", 30)
+                .style("display", "block")
+
+            let position = 0;
+            let next_position = 0;
+            for (let chr_i = 0; chr_i < nb_chrom; chr_i++) {
+                for (let nuc_i = 0; nuc_i < whole_sequences[chr_i].length; nuc_i++) {
+                    if (nuc_i % tickFrequency == 0) {
+                        position = x(chr_i==0? nuc_i
+                                    : nuc_i + chr_i * whole_sequences[0].length/5 + whole_sequences[chr_i-1].length);
+                        next_position = x(chr_i==0? nuc_i + 1
+                                    : nuc_i + 1 + chr_i * whole_sequences[0].length/5 + whole_sequences[chr_i-1].length);
+                        xAxis.append("text")
+                            .attr("x", position + (next_position - position) / 2)
+                            .attr("y", 20)
+                            .attr("text-anchor", "middle")
+                            .attr("alignment-baseline", "middle")
+                            .text(nuc_i<1000? nuc_i :nuc_i.toExponential());
+                        xAxis.append("line")
+                            .attr("x1", position + (next_position - position) / 2)
+                            .attr("y1", 0)
+                            .attr("x2", position + (next_position - position) / 2)
+                            .attr("y2", 10)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", 1);
+                    }
                 }
             }
         }
     }
 };
+
+function orderOfMagnitude(x) {
+    return Math.floor(Math.log10(x));
+}
 </script>
