@@ -1,7 +1,9 @@
 <template>
     <div v-if="queryProcessed" class="variants" style="text-align:left; margin-left:10px"> 
-        <input type="checkbox" id="visualisation" v-model="visualisation"/>
-        <label for="visualisation">See visualisation</label>
+        <div v-if="filesUploaded">
+            <input type="checkbox" id="visualisation" v-model="visualisation"/>
+            <label for="visualisation">See visualisation</label>
+        </div>
         <div v-if="!visualisation">
             <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
                 {{allResults.mapResults[filename]["nb_variants"] !== null ? 
@@ -27,7 +29,7 @@
             <div v-if="zoom>8">
                 <SequenceViewer 
                     :zoom_level="zoom"
-                    :no_skip="skip"
+                    :no_skip="!skip"
                     :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
                 </SequenceViewer>
             </div>
@@ -58,7 +60,7 @@ export default {
     setup() {
         const { allResults } = useState(["allResults"]);
         const visualisation = ref(false);
-        const skip = ref(false);
+        const skip = ref(true);
 
         return {
             allResults,
@@ -82,6 +84,13 @@ export default {
     computed: {
         queryProcessed() {
             return this.$store.getters.queryProcessed;
+        },
+        filesUploaded() {
+            let last_key = Object.keys(this.allResults.mapResults)[Object.keys(this.allResults.mapResults).length-1]
+            if (this.allResults.mapResults[last_key].mapped_sequences.length !== 0){
+                return true;
+            }
+            return false;
         }
     },
 
