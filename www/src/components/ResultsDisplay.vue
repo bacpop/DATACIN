@@ -28,13 +28,13 @@
                 <SequenceViewer 
                     :zoom_level="zoom"
                     :no_skip="skip"
-                    :key="use_keys(zoom, skip)"> <!-- Reactivity on zoom and skip changes -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
                 </SequenceViewer>
             </div>
             <div v-else>
                 <MinimisedSequenceViewer 
                     :zoom_level="zoom"
-                    :key="zoom"> <!-- Reactivity on zoom changes -->
+                    :key="use_keys([zoom, reloadKey])"> <!-- Reactivity on zoom changes and reload -->
                 </MinimisedSequenceViewer>
             </div>
         </div>  
@@ -67,6 +67,18 @@ export default {
         }
     },
 
+    watch: {
+        'allResults.mapResults': {
+            handler() {
+                let last_key = Object.keys(this.allResults.mapResults)[Object.keys(this.allResults.mapResults).length-1]
+                if (this.allResults.mapResults[last_key].mapped_sequences.length !== 0){
+                    this.reloadKey++;
+                }
+            },
+            deep: true,
+        },
+    },
+
     computed: {
         queryProcessed() {
             return this.$store.getters.queryProcessed;
@@ -74,14 +86,15 @@ export default {
     },
 
     methods: {
-        use_keys(key1, key2) {
-            return `${key1}-${key2}`
+        use_keys(list_of_keys) {
+            return list_of_keys.join('-');
         }
     },
     
     data() {
         return {
-        zoom: 10
+            zoom: 10,
+            reloadKey: 0
         }
     },
 };

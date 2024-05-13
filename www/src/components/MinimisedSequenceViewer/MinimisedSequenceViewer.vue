@@ -48,7 +48,7 @@ export default {
 
             const width = document.body.clientWidth - 20;
             const totalWidth = width * this.zoom_level;
-            const height = 420;
+            const height = Math.min(...[nb_mapping* 100, 420]);
             const marginTop = 20;
             const marginRight = 20;
             const marginBottom = 30;
@@ -81,7 +81,7 @@ export default {
             for (let i = 0; i < nb_mapping; i++) {
                 legend.append("text")
                     .attr("x", 10)
-                    .attr("y", y(i-1) - (height - marginBottom - marginTop)/nb_mapping/2)
+                    .attr("y", y(i) + 30 - (height - marginBottom - marginTop) / nb_mapping / 2)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
                     .text(mapping_names[i]);
