@@ -34,8 +34,8 @@
                     <button class="legend">?</button>
                     <template #content>
                         <div style="text-align: left;">
-                            <div class="square" style="background-color: red;"></div> Part of the sequence similar to the reference<br>
-                            <div class="square" style="background-color: black;"></div> Part of the sequence different to the reference<br>
+                            <div class="square" style="background-color: red;"></div> Part of the sequence different to the reference<br>
+                            <div class="square" style="background-color: black;"></div> Part of the sequence similar to the reference<br>
                             <div class="square" style="background-color: white;"></div> Part of the sequence not mapped<br>
                         </div>
                     </template>
