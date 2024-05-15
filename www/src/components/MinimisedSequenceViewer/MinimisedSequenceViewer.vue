@@ -47,17 +47,18 @@ export default {
             const nb_chrom = whole_sequences.length;
 
             const width = document.body.clientWidth - 20;
-            const totalWidth = width * this.zoom_level ** 2;
+            // totalWidth is made to be width when zoom_level is 0 and 
+            // to give 5px for each nucleotide when zoom_level is maximum (8).
+            const totalWidth = (5 * length_sequence - width)/8 * this.zoom_level + width;
             const height = Math.min(...[nb_mapping* 40, 420]);
             const totalHeight = height + 30;
             const marginTop = 10;
             const marginRight = 20;
             const marginBottom = 3;
             const marginLeft = 1.1*Math.max(...text_widths);
-            let tickFrequency = Math.ceil(length_sequence/totalWidth*100/10**orderOfMagnitude(length_sequence/70))*10**orderOfMagnitude(length_sequence/70);
-            if (tickFrequency == 0) {
-                tickFrequency = 1000;
-            }
+            // Made to be the closest round tick frequency to have non-overlaping ticks.
+            let tickFrequency = length_sequence / (totalWidth / (1.1 * getTextWidth(12, "Arial", length_sequence)));
+            tickFrequency = Math.ceil(tickFrequency / 10 ** orderOfMagnitude(tickFrequency)) * 10 ** orderOfMagnitude(tickFrequency);
 
             // Create the horizontal (x) scale over the total width.
             const x = d3.scaleLinear()
@@ -193,7 +194,9 @@ export default {
                             .attr("y", 20)
                             .attr("text-anchor", "middle")
                             .attr("alignment-baseline", "middle")
-                            .text(nuc_i<1000? nuc_i :nuc_i.toExponential());
+                            .style("font-size", "12px")
+                            .style("font-family", "Arial")
+                            .text(nuc_i);
                         xAxis.append("line")
                             .attr("x1", position + (next_position - position) / 2)
                             .attr("y1", 0)

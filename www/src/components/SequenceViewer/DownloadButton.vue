@@ -1,6 +1,6 @@
 <template>
     <div>
-        <button @click="downloadALN">Download .aln</button>
+        <button @click="downloadALN" id="Download">Download .aln</button>
     </div>
 </template>
 
@@ -47,3 +47,9 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+#Download {
+    float: left;
+}
+</style>

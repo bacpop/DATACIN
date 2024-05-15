@@ -11,7 +11,7 @@
             </div>
             <div v-if="zoom>8 && visualisation" class="legend">
                 <Popper>
-                    <button class="button">?</button>
+                    <button>?</button>
                     <template #content>
                         <div style="text-align: left;">
                             <b style="color: red; display: inline-block; width: 60px;">A</b> Diffence between the reference and the mapped sequence<br>
@@ -24,7 +24,7 @@
             </div>
             <div v-else-if="visualisation" class="legend">
                 <Popper>
-                    <button class="button">?</button>
+                    <button>?</button>
                     <template #content>
                         <div style="text-align: left;">
                             <div class="square" style="background-color: red;"></div> Part of the sequence different to the reference<br>
@@ -40,7 +40,7 @@
             <VueSlider 
                 v-model="zoom" 
                 :lazy="true" 
-                :min="1"
+                :min="0"
                 :max="20"
                 :interval="0.1"
                 :tooltip="'none'"
@@ -154,13 +154,19 @@ export default {
     --popper-theme-padding: 5px;
   }
 
+
+  #band {
+    width: 100%;
+    margin-left: 20px;
+  }
+
   .checkbox {
     float: left;
     text-align: left;
     margin-right: 20px;
   }
 
-  .button {
+  .legend button {
     background-color: #333333;
     color: white;
     border: none;
@@ -181,9 +187,8 @@ export default {
   #table {
     width: 100%;
     float: left;
-    margin-top: 10px;
     text-align: left;
-    margin-left: 20px;
+    margin-left: 50px;
   }
 
   .square {
