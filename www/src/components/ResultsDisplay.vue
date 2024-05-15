@@ -1,24 +1,17 @@
 <template>
     <div v-if="queryProcessed" class="variants"> 
-        <div v-if="filesUploaded" class="checkbox">
-            <input type="checkbox" id="visualisation" v-model="visualisation"/>
-            <label for="visualisation">See visualisation</label>
-        </div>
-        <div v-if="!visualisation" id="table">
-            <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
-                {{allResults.mapResults[filename]["nb_variants"] !== null ? 
-                        "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" 
-                        : 'Loading...' }}
-            </li>
-        </div>
-        <div v-else>
-            <div v-if="zoom>8" class="checkbox">
+        <div id="band" style="height: 30px">
+            <div v-if="filesUploaded" class="checkbox">
+                <input type="checkbox" id="visualisation" v-model="visualisation"/>
+                <label for="visualisation">See visualisation</label>
+            </div>
+            <div v-if="zoom>8 && visualisation" class="checkbox">
                 <input type="checkbox" id="skip" v-model="skip"/>
                 <label for="skip">Skip unmapped sequences</label>
             </div>
-            <div v-if="zoom>8">
+            <div v-if="zoom>8 && visualisation" class="legend">
                 <Popper>
-                    <button class="legend">?</button>
+                    <button class="button">?</button>
                     <template #content>
                         <div style="text-align: left;">
                             <b style="color: red; display: inline-block; width: 60px;">A</b> Diffence between the reference and the mapped sequence<br>
@@ -29,9 +22,9 @@
                     </template>
                 </Popper>
             </div>
-            <div v-else>
+            <div v-else-if="visualisation" class="legend">
                 <Popper>
-                    <button class="legend">?</button>
+                    <button class="button">?</button>
                     <template #content>
                         <div style="text-align: left;">
                             <div class="square" style="background-color: red;"></div> Part of the sequence different to the reference<br>
@@ -41,6 +34,9 @@
                     </template>
                 </Popper>
             </div>
+            <DownloadButton></DownloadButton>
+        </div>
+        <div v-if="visualisation" id="Slider">
             <VueSlider 
                 v-model="zoom" 
                 :lazy="true" 
@@ -48,23 +44,32 @@
                 :max="20"
                 :interval="0.1"
                 :tooltip="'none'"
-                style="margin: 5px 0"
+                style="margin: 5px 0;"
                 >
             </VueSlider>
-            <div v-if="zoom>8">
+        </div>
+        <div id="MainView">
+            <div v-if="!visualisation" id="table">
+                <li v-for="filename in Object.keys(allResults.mapResults)" :key="filename"> 
+                    {{allResults.mapResults[filename]["nb_variants"] !== null ? 
+                            "File: " + filename + " → Number of variants detected: " +  allResults.mapResults[filename]["nb_variants"] + ", Coverage: " + Math.round(allResults.mapResults[filename]['coverage']*100) + "%" 
+                            : 'Loading...' }}
+                </li>
+            </div>
+            <div v-else-if="zoom>8" id="FullViewer">
                 <SequenceViewer 
                     :zoom_level="zoom"
                     :no_skip="!skip"
                     :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
                 </SequenceViewer>
             </div>
-            <div v-else>
+            <div v-else id="MinimisedViewer">
                 <MinimisedSequenceViewer 
                     :zoom_level="zoom"
-                    :key="use_keys([zoom, reloadKey])"> <!-- Reactivity on zoom changes and reload -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
                 </MinimisedSequenceViewer>
             </div>
-        </div>  
+        </div>
     </div>
 </template>
 
@@ -75,6 +80,7 @@ import SequenceViewer from "./SequenceViewer/SequenceViewer.tsx";
 import VueSlider from 'vue-3-slider-component'
 import MinimisedSequenceViewer from "./MinimisedSequenceViewer/MinimisedSequenceViewer.vue";
 import Popper from "vue3-popper";
+import DownloadButton from "./SequenceViewer/DownloadButton.vue";
 
 export default {
     name: "ResultsDisplay",
@@ -82,7 +88,8 @@ export default {
         SequenceViewer,
         VueSlider,
         MinimisedSequenceViewer,
-        Popper
+        Popper,
+        DownloadButton
         },
     setup() {
         const { allResults } = useState(["allResults"]);
@@ -148,22 +155,27 @@ export default {
   }
 
   .checkbox {
-    width: 30%;
     float: left;
     text-align: left;
+    margin-right: 20px;
   }
 
-  .legend {
+  .button {
     background-color: #333333;
     color: white;
     border: none;
     cursor: pointer;
     padding: 5px 10px;
     text-decoration: none;
-    display: inline-block;
     font-size: 14px;
     transition-duration: 0.4s;
     border-radius: 100px;
+    float: left;
+  }
+
+  .legend {
+    margin-right: 20px;
+    float: left;
   }
 
   #table {

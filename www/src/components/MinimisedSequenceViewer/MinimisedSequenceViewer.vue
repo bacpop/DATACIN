@@ -47,14 +47,17 @@ export default {
             const nb_chrom = whole_sequences.length;
 
             const width = document.body.clientWidth - 20;
-            const totalWidth = width * this.zoom_level;
+            const totalWidth = width * this.zoom_level ** 2;
             const height = Math.min(...[nb_mapping* 40, 420]);
             const totalHeight = height + 30;
             const marginTop = 10;
             const marginRight = 20;
             const marginBottom = 3;
             const marginLeft = 1.1*Math.max(...text_widths);
-            const tickFrequency = Math.round(length_sequence/totalWidth*100/10**orderOfMagnitude(length_sequence/70))*10**orderOfMagnitude(length_sequence/70);
+            let tickFrequency = Math.ceil(length_sequence/totalWidth*100/10**orderOfMagnitude(length_sequence/70))*10**orderOfMagnitude(length_sequence/70);
+            if (tickFrequency == 0) {
+                tickFrequency = 1000;
+            }
 
             // Create the horizontal (x) scale over the total width.
             const x = d3.scaleLinear()
@@ -146,6 +149,7 @@ export default {
                                 .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/5) - x(current_nucleotide + chr_i * whole_sequences[0].length/5))
                                 .attr("height", y(map_i) - y(map_i + 1))
                                 .attr("fill", current_is_equal ? "black" : "red");
+                            
                             current_nucleotide = nucleotide_count;
                             current_is_equal = new_is_equal;
                         }
@@ -159,6 +163,15 @@ export default {
                         .attr("fill", current_is_equal ? "black" : "red");
                 }
             }
+
+            svg.selectAll("rect").each(function() {
+                if (d3.select(this).attr("fill") == "red") {
+                    if (d3.select(this).attr("width") < 1 && d3.select(this).attr("width") > 0){
+                        d3.select(this).attr("width", `1px`)
+                            .attr("x", d3.select(this).attr("x") - 0.5);
+                    }
+                }
+            });
 
             // Create the horizontal axis.
             const xAxis = body.append("svg")

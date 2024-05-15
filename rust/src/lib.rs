@@ -59,7 +59,7 @@ impl SkaData {
         }
 
         let k = 31;
-        let rc = true;
+        let rc = false;
         let ambig_mask = false;
         let repeat_mask = false;
 
