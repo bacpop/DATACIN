@@ -79,7 +79,6 @@ impl SkaData {
     }
 
     pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> String {
-        // TODO - fastqs and two files
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
@@ -100,47 +99,34 @@ impl SkaData {
         };
         let mut results = json::JsonValue::new_array();
 
-        results["Number of variants"] = self.mapped[self.mapped.len() - 1].mapped_bases().len().into();
-        results["Coverage"] = (self.mapped[self.mapped.len() - 1].mapped_bases().len() as f64 / self.reference.len() as f64).into();
         results["Mapped sequences"] = json::JsonValue::new_array();
 
-        let mut original_seqs_length = Vec::new();
-        for sequence in self.reference_string.clone() {
-            original_seqs_length.push(sequence.len());
-        }
-        let mapping = self.reconstruct_mapping(original_seqs_length);
+        let ref whole_mapping = self.reference.pseudoalignment(self.mapped[self.mapped.len() - 1].mapped_bases())[0];
 
-        for (i, sequence) in mapping.iter().enumerate() {
-            results["Mapped sequences"][i] = sequence.clone().into();
+        let mut current_length = 0;
+        for chr in 0..self.reference_string.len() {
+            let chr_mapping: String = whole_mapping[current_length..current_length + self.reference_string[chr].len()].to_string();
+            let _ = results["Mapped sequences"].push(chr_mapping);
+            current_length += self.reference_string[chr].len();
         }
+
+        results["Number of variants"] = self.mapped[self.mapped.len() - 1].mapped_bases().len().into();
+        // The result is a concatenated string of all the mapped bases
+
+        let mut count_mapped_bases = 0;
+        let mut count_total_bases = 0;
+        for base in whole_mapping.chars() {
+            if base != '-' {
+                count_mapped_bases += 1;
+                count_total_bases += 1;
+            } else {
+                count_total_bases += 1;
+            }
+        }
+
+        results["Coverage"] = (count_mapped_bases as f64 / count_total_bases as f64).into();
 
         return results.dump();
-    }
-
-    pub fn reconstruct_mapping(&self, original_seqs_length: Vec<usize>) -> Vec<String> {
-        let mut current_chrom = self.mapped[self.mapped.len() - 1].mapped_bases()[0].chrom;
-        let mut sequences: Vec<String> = Vec::new();
-        let mut current_seq: String = "".to_string();
-
-        for variant in self.mapped[self.mapped.len() - 1].mapped_bases() {
-            if variant.chrom != current_chrom {
-                for _ in current_seq.len()..original_seqs_length[current_chrom] {
-                    current_seq.push('-');
-                }
-                sequences.push(current_seq);
-                current_seq = "".to_string();
-                current_chrom = variant.chrom;
-            }
-            for _ in current_seq.len()..variant.pos {
-                current_seq.push('-');
-            }
-            current_seq.push(variant.base as char);
-        }
-        for _ in current_seq.len()..original_seqs_length[original_seqs_length.len() - 1] {
-            current_seq.push('-');
-        }
-        sequences.push(current_seq);
-        return sequences;
     }
 
     pub fn get_reference(&self) -> String {

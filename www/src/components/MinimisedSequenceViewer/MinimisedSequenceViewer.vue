@@ -57,13 +57,15 @@ export default {
             const marginRight = 20;
             const marginBottom = 3;
             const marginLeft = 1.1*Math.max(...text_widths);
+            // Made to always have the same size between chromosomes.
+            const size_between_chrom = 50 / (totalWidth / length_sequence ) ;
             // Made to be the closest round tick frequency to have non-overlaping ticks.
             let tickFrequency = length_sequence / (totalWidth / (1.1 * getTextWidth(12, "Arial", length_sequence)));
             tickFrequency = Math.ceil(tickFrequency / 10 ** orderOfMagnitude(tickFrequency)) * 10 ** orderOfMagnitude(tickFrequency);
 
             // Create the horizontal (x) scale over the total width.
             const x = d3.scaleLinear()
-                .domain([0, length_sequence + (nb_chrom - 1) * whole_sequences[0].length/10])
+                .domain([0, length_sequence + (nb_chrom - 1) * size_between_chrom])
                 .range([marginLeft, totalWidth - marginRight]);
 
             // Create the vertical (y) scale.
@@ -108,13 +110,13 @@ export default {
             // Plot rectangles for each chromosome with a text inside
             for (let chr_i = 0; chr_i < nb_chrom; chr_i++) {
                 chr_svg.append("rect")
-                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
+                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * size_between_chrom))
                     .attr("y", 0)
-                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
+                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * size_between_chrom) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * size_between_chrom))
                     .attr("height", 30)
                     .attr("fill", "lightgrey");
                 chr_svg.append("text")
-                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
+                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * size_between_chrom))
                     .attr("y", 15)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
@@ -146,9 +148,9 @@ export default {
                         }
                         else {
                             svg.append("rect")
-                                .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/10))
+                                .attr("x", x(current_nucleotide + chr_i * size_between_chrom))
                                 .attr("y", y(map_i+1))
-                                .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/10) - x(current_nucleotide + chr_i * whole_sequences[0].length/10))
+                                .attr("width", x(nucleotide_count + chr_i * size_between_chrom) - x(current_nucleotide + chr_i * size_between_chrom))
                                 .attr("height", y(map_i) - y(map_i + 1))
                                 .attr("fill", current_is_equal ? "black" : "red");
                             
@@ -158,9 +160,9 @@ export default {
                         nucleotide_count += 1;
                     }
                     svg.append("rect")
-                        .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/10))
+                        .attr("x", x(current_nucleotide + chr_i * size_between_chrom))
                         .attr("y", y(map_i+1))
-                        .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/10) - x(current_nucleotide + chr_i * whole_sequences[0].length/10))
+                        .attr("width", x(nucleotide_count + chr_i * size_between_chrom) - x(current_nucleotide + chr_i * size_between_chrom))
                         .attr("height", y(map_i) - y(map_i + 1))
                         .attr("fill", current_is_equal ? "black" : "red");
                 }
@@ -168,10 +170,10 @@ export default {
 
             svg.selectAll("rect").each(function() {
                 if (d3.select(this).attr("fill") == "red") {
-                    if (d3.select(this).attr("width") < 0.1 && d3.select(this).attr("width") > 0){
+                    if (d3.select(this).attr("width") < 0.2 && d3.select(this).attr("width") > 0){
                         const width = d3.select(this).attr("width");
-                        d3.select(this).attr("width", `0.1px`)
-                            .attr("x", d3.select(this).attr("x") - (0.1 - width));
+                        d3.select(this).attr("width", `0.2px`)
+                            .attr("x", d3.select(this).attr("x") - (0.2 - width));
                     }
                 }
             });
@@ -188,9 +190,9 @@ export default {
                 for (let nuc_i = 0; nuc_i < whole_sequences[chr_i].length; nuc_i++) {
                     if (nuc_i % tickFrequency == 0) {
                         position = x(chr_i==0? nuc_i
-                                    : nuc_i + chr_i * whole_sequences[0].length/10 + whole_sequences[chr_i-1].length);
+                                    : nuc_i + chr_i * size_between_chrom + whole_sequences[chr_i-1].length);
                         next_position = x(chr_i==0? nuc_i + 1
-                                    : nuc_i + 1 + chr_i * whole_sequences[0].length/10 + whole_sequences[chr_i-1].length);
+                                    : nuc_i + 1 + chr_i * size_between_chrom + whole_sequences[chr_i-1].length);
                         xAxis.append("text")
                             .attr("x", position + (next_position - position) / 2)
                             .attr("y", 20)

@@ -8,6 +8,12 @@ use super::{log, QualFilter};
 use crate::fastx::open_fasta;
 use crate::ska_dict::split_kmer::SplitKmer;
 
+pub mod aln_writer;
+use crate::ska_ref::aln_writer::AlnWriter;
+
+use crate::ska_map::Variant;
+use rayon::prelude::*;
+
 /// A split k-mer in the reference sequence encapsulated with positional data.
 #[derive(Debug, Clone)]
 pub struct RefKmer {
@@ -201,4 +207,40 @@ impl RefSka {
     pub fn get_seq(&self) ->  &Vec<Vec<u8>> {
         &self.seq
     }
+
+    // Calls the necessary parts of AlnWriter (in parallel) to produce all the
+    // pseudoalignments. The calling function simply writes them out (ALN)
+    pub fn pseudoalignment(&self, mapped_bases: &Vec<Variant>) -> Vec<String> {
+
+        let mapped_variants: Vec<u8> = mapped_bases.iter().map(|v| v.base).collect();
+        let mapped_pos: Vec<(usize, usize)> = mapped_bases.iter().map(|v| (v.chrom, v.pos)).collect();
+
+        let mut seq_writers =
+            vec![
+                AlnWriter::new(&self.seq, self.k, &self.repeat_coors, self.ambig_mask);
+                1
+            ];
+        seq_writers
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(_idx, seq)| {
+                let sample_vars = mapped_variants.clone();
+                for ((mapped_chrom, mapped_pos), base) in
+                    mapped_pos.iter().zip(sample_vars.iter())
+                {
+                    if *base != b'-' {
+                        seq.write_split_kmer(*mapped_pos, *mapped_chrom, *base);
+                    }
+                }
+                seq.finalise()
+            });
+
+        let sequences: Vec<String> = seq_writers
+            .iter_mut()
+            .map(|seq| String::from_utf8_lossy(seq.get_seq()).to_string())
+            .collect();
+
+        sequences
+    }
+
 }
