@@ -22,6 +22,7 @@ export default defineComponent({
     },
     
     setup(props: { zoom_level: Number | undefined, no_skip: boolean}){
+        console.log("Creating viewer for zoom level: ", props.zoom_level)
         const { allResults } = useState(["allResults"]);
         const whole_sequences: string[] = allResults.value.ref;
 

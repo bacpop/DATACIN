@@ -18,6 +18,7 @@ export default {
 
     methods: {
         createSequenceViewer() {
+            console.log("Creating minimised viewer for zoom level: ", this.zoom_level)
             const { allResults } = useState(["allResults"]);
 
             const whole_sequences = allResults.value.ref;
@@ -26,14 +27,14 @@ export default {
             for (let _ = 0; _ < whole_sequences.length; _++){
                 whole_mapped_sequences_chrom.push([]);
             }
-            for (const key in allResults.value.mapResults){
+            for (const key of Object.keys(allResults.value.mapResults).reverse()){
                 for (let i = 0; i < whole_sequences.length; i++){
                     whole_mapped_sequences_chrom[i].push(allResults.value.mapResults[key].mapped_sequences[i]);
                 }
             }
 
             const nb_mapping = whole_mapped_sequences_chrom[0].length;
-            const mapping_names = Object.keys(allResults.value.mapResults);
+            const mapping_names = Object.keys(allResults.value.mapResults).reverse();
 
             let text_widths = [];
             for (let j = 0; j < nb_mapping; j++){
@@ -48,8 +49,8 @@ export default {
 
             const width = document.body.clientWidth - 20;
             // totalWidth is made to be width when zoom_level is 0 and 
-            // to give 5px for each nucleotide when zoom_level is maximum (8).
-            const totalWidth = (5 * length_sequence - width)/8 * this.zoom_level + width;
+            // to give 1px for each nucleotide when zoom_level is maximum (8).
+            const totalWidth = width * Math.exp(1/8 * this.zoom_level * Math.log(length_sequence/width));
             const height = Math.min(...[nb_mapping* 40, 420]);
             const totalHeight = height + 30;
             const marginTop = 10;
@@ -62,7 +63,7 @@ export default {
 
             // Create the horizontal (x) scale over the total width.
             const x = d3.scaleLinear()
-                .domain([0, length_sequence + (nb_chrom - 1) * whole_sequences[0].length/5])
+                .domain([0, length_sequence + (nb_chrom - 1) * whole_sequences[0].length/10])
                 .range([marginLeft, totalWidth - marginRight]);
 
             // Create the vertical (y) scale.
@@ -107,13 +108,13 @@ export default {
             // Plot rectangles for each chromosome with a text inside
             for (let chr_i = 0; chr_i < nb_chrom; chr_i++) {
                 chr_svg.append("rect")
-                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
+                    .attr("x", x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
                     .attr("y", 0)
-                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
+                    .attr("width", x((chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10) + whole_sequences[chr_i].length) - x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
                     .attr("height", 30)
                     .attr("fill", "lightgrey");
                 chr_svg.append("text")
-                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/5))
+                    .attr("x", 10 + x(chr_i==0? 0 : whole_sequences[chr_i-1].length + chr_i * whole_sequences[0].length/10))
                     .attr("y", 15)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
@@ -145,9 +146,9 @@ export default {
                         }
                         else {
                             svg.append("rect")
-                                .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/5))
+                                .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/10))
                                 .attr("y", y(map_i+1))
-                                .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/5) - x(current_nucleotide + chr_i * whole_sequences[0].length/5))
+                                .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/10) - x(current_nucleotide + chr_i * whole_sequences[0].length/10))
                                 .attr("height", y(map_i) - y(map_i + 1))
                                 .attr("fill", current_is_equal ? "black" : "red");
                             
@@ -157,9 +158,9 @@ export default {
                         nucleotide_count += 1;
                     }
                     svg.append("rect")
-                        .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/5))
+                        .attr("x", x(current_nucleotide + chr_i * whole_sequences[0].length/10))
                         .attr("y", y(map_i+1))
-                        .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/5) - x(current_nucleotide + chr_i * whole_sequences[0].length/5))
+                        .attr("width", x(nucleotide_count + chr_i * whole_sequences[0].length/10) - x(current_nucleotide + chr_i * whole_sequences[0].length/10))
                         .attr("height", y(map_i) - y(map_i + 1))
                         .attr("fill", current_is_equal ? "black" : "red");
                 }
@@ -167,9 +168,10 @@ export default {
 
             svg.selectAll("rect").each(function() {
                 if (d3.select(this).attr("fill") == "red") {
-                    if (d3.select(this).attr("width") < 1 && d3.select(this).attr("width") > 0){
-                        d3.select(this).attr("width", `1px`)
-                            .attr("x", d3.select(this).attr("x") - 0.5);
+                    if (d3.select(this).attr("width") < 0.1 && d3.select(this).attr("width") > 0){
+                        const width = d3.select(this).attr("width");
+                        d3.select(this).attr("width", `0.1px`)
+                            .attr("x", d3.select(this).attr("x") - (0.1 - width));
                     }
                 }
             });
@@ -186,9 +188,9 @@ export default {
                 for (let nuc_i = 0; nuc_i < whole_sequences[chr_i].length; nuc_i++) {
                     if (nuc_i % tickFrequency == 0) {
                         position = x(chr_i==0? nuc_i
-                                    : nuc_i + chr_i * whole_sequences[0].length/5 + whole_sequences[chr_i-1].length);
+                                    : nuc_i + chr_i * whole_sequences[0].length/10 + whole_sequences[chr_i-1].length);
                         next_position = x(chr_i==0? nuc_i + 1
-                                    : nuc_i + 1 + chr_i * whole_sequences[0].length/5 + whole_sequences[chr_i-1].length);
+                                    : nuc_i + 1 + chr_i * whole_sequences[0].length/10 + whole_sequences[chr_i-1].length);
                         xAxis.append("text")
                             .attr("x", position + (next_position - position) / 2)
                             .attr("y", 20)
