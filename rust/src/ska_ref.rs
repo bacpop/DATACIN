@@ -82,8 +82,8 @@ impl RefSka {
             split_kmer_pos.reserve(seqrec.full_seq().len());
 
             let kmer_opt = SplitKmer::new(
-                seqrec.seq().to_vec(),
-                seqrec.seq().len(),
+                seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect(),
+                seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len(),
                 None,
                 k,
                 rc,

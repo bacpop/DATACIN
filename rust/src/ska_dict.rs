@@ -125,7 +125,8 @@ impl SkaDict {
             ReaderType::Fasta(ref mut r) => {
                 if let Some(record) = r.next(){
                     let seqrec = record.expect("Invalid FASTA record");
-                    let seq: Vec<u8> = seqrec.seq().to_vec();
+                    // There can be \n in the sequence, its ascii code is 10
+                    let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
                     let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
@@ -135,7 +136,8 @@ impl SkaDict {
             ReaderType::Fastq(ref mut r) => {
                 if let Some(record) = r.next(){
                     let seqrec = record.expect("Invalid FASTQ record");
-                    let seq: Vec<u8> = seqrec.seq().to_vec();
+                    // There can be \n in the sequence, its ascii code is 10
+                    let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
                     let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
