@@ -59,7 +59,7 @@ impl SkaData {
         }
 
         let k = 31;
-        let rc = false;
+        let rc = true;
         let ambig_mask = false;
         let repeat_mask = false;
 
@@ -100,7 +100,7 @@ impl SkaData {
         };
 
         log("Reads mapped successfully!");
-
+        
         let mut results = json::JsonValue::new_array();
 
         results["Mapped sequences"] = json::JsonValue::new_array();

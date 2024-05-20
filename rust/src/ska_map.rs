@@ -45,11 +45,19 @@ impl SkaMap {
         let mut mapped_bases = Vec::new();
         for ref_kmer in reference.kmer_iter() {
             if let Some(kmer_match) = query_ska.kmers().get(&ref_kmer.kmer) {
-                mapped_bases.push(Variant {
-                    chrom: ref_kmer.chrom,
-                    pos: ref_kmer.pos,
-                    base: *kmer_match,
-                })
+                if ref_kmer.rc{
+                    mapped_bases.push(Variant {
+                        chrom: ref_kmer.chrom,
+                        pos: ref_kmer.pos,
+                        base: RC_IUPAC[*kmer_match as usize],
+                    })
+                } else {
+                    mapped_bases.push(Variant {
+                        chrom: ref_kmer.chrom,
+                        pos: ref_kmer.pos,
+                        base: *kmer_match,
+                    })
+                }
             }
         }
         Self { mapped_bases }
@@ -59,3 +67,39 @@ impl SkaMap {
         &self.mapped_bases
     }
 }
+
+/// Lookup table which gives reverse complement of a single IUPAC code (ASCII/`u8`).
+pub const RC_IUPAC: [u8; 256] = [
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 0-15
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 16-31
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 32-47
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 48-63
+    b'-', b'T', b'V', b'G', b'H', b'-', b'-', b'C', b'D', b'-', b'-', b'M', b'-', b'K', b'N',
+    b'-', // 64-79
+    b'-', b'-', b'Y', b'S', b'A', b'-', b'B', b'W', b'-', b'R', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 80-95
+    b'-', b'T', b'V', b'G', b'H', b'-', b'-', b'C', b'D', b'-', b'-', b'M', b'-', b'K', b'N',
+    b'-', // 96-111
+    b'-', b'-', b'Y', b'S', b'A', b'-', b'B', b'W', b'-', b'R', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 112-127
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 128-143
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 144-159
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 160-175
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 176-191
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 192-207
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 208-223
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 224-239
+    b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-', b'-',
+    b'-', // 240-255
+];

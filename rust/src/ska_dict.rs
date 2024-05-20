@@ -100,8 +100,7 @@ impl SkaDict {
                 _ => panic!("Base encoding error: {}", base as char),
             });
     }
-
-
+    
     /// Iterates through all the k-mers from an input fastx file and adds them
     /// to the dictionary
     pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str) {
