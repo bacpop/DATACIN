@@ -79,9 +79,10 @@ impl RefSka {
         while let Some(record) = reader.next() {
             let seqrec = record.expect("Invalid FASTA record");
             chrom_names.push(seqrec.id().unwrap().to_owned());
-            split_kmer_pos.reserve(seqrec.full_seq().len());
+            split_kmer_pos.reserve(seqrec.full_seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len());
 
             let kmer_opt = SplitKmer::new(
+                // Remove \n characters from the sequence
                 seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect(),
                 seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len(),
                 None,
@@ -119,7 +120,8 @@ impl RefSka {
                 }
             }
             chrom += 1;
-            seq.push(seqrec.seq().to_vec());
+            // Remove \n characters from the sequence
+            seq.push(seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>());
         }
         if split_kmer_pos.is_empty() {
             panic!("No valid sequence");

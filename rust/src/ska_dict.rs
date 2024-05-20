@@ -127,7 +127,7 @@ impl SkaDict {
                     let seqrec = record.expect("Invalid FASTA record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seq.len();
+                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
                     Some((seq, seq_len))
                 } else {
                     None
@@ -138,7 +138,7 @@ impl SkaDict {
                     let seqrec = record.expect("Invalid FASTQ record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seq.len();
+                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
                     Some((seq, seq_len))
                 } else {
                     None

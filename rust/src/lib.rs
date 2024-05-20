@@ -82,6 +82,7 @@ impl SkaData {
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
+        log(&format!("Mapping reads to reference"));
         let file_name = input_file.name();
         let file_type = file_name.split('.').nth(1).unwrap();
         let mut wf1 = WebSysFile::new(input_file);
@@ -97,6 +98,9 @@ impl SkaData {
             self.mapped
                 .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
         };
+
+        log("Reads mapped successfully!");
+
         let mut results = json::JsonValue::new_array();
 
         results["Mapped sequences"] = json::JsonValue::new_array();
@@ -125,6 +129,8 @@ impl SkaData {
         }
 
         results["Coverage"] = (count_mapped_bases as f64 / count_total_bases as f64).into();
+
+        log("Results computed successfully!");
 
         return results.dump();
     }

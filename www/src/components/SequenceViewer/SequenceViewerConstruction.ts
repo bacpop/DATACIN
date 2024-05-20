@@ -92,7 +92,7 @@ export function Rows(
                 current_width = 0;
             }
 
-            nucleotide = whole_sequence[i];
+            nucleotide = whole_sequence[i].toUpperCase();
 
             if (whole_mapped_sequences.every(mapped_sequence => mapped_sequence[i] == "-") && !no_skip) {
                 if (!skip) {
@@ -133,14 +133,14 @@ export function Rows(
             else {
                 for (let j = 0; j < nb_mapping; j++){
 
-                    if (whole_mapped_sequences[j][i] == nucleotide) {
+                    if (whole_mapped_sequences[j][i].toUpperCase() == nucleotide) {
                         nucleotide_mapped[j] = "-";
                     }
                     else if (whole_mapped_sequences[j][i] == "-") {
                         nucleotide_mapped[j] = " ";
                     }
                     else {
-                        nucleotide_mapped[j] = whole_mapped_sequences[j][i];
+                        nucleotide_mapped[j] = whole_mapped_sequences[j][i].toUpperCase();
                     }
                 }
                 skip = false;
@@ -149,7 +149,7 @@ export function Rows(
             current_width += font_width;
             font_widths.push(font_width);
             nucleotides_position.push(i + 1);
-            sequence.push(nucleotide);
+            sequence.push(nucleotide.toUpperCase());
             for (let j = 0; j < nb_mapping; j++){
                 mapped_sequences[j].push(nucleotide_mapped[j]);
             }
