@@ -2,17 +2,20 @@
     <div id="app">
         <img src="datacin.png" alt="Datacin Logo" class="app-logo">
         <DropZone />
+        <ResultsDisplay />
     </div>
 </template>
 
 <script>
 import DropZone from './components/DropZone.vue';
+import ResultsDisplay from './components/ResultsDisplay.vue';
 import WorkerMapper from '@/workers/Mapper.worker.js';
 
 export default {
     name: 'App',
     components: {
-        DropZone
+        DropZone,
+        ResultsDisplay
     },
     mounted: function () {
         console.log("Loading wasm module in a worker thread")

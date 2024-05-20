@@ -26,14 +26,21 @@ export class Mapper {
         if (this.SkaData === null) {
             this.SkaData = this.wasm.SkaData.new(file);
         }
-        this.worker.postMessage({ ref: file });
+        this.worker.postMessage({ ref: file, sequences: this.SkaData.get_reference().split('\n') });
     }
 
     map(file, revReadFile) {
         if (this.SkaData === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
-        this.worker.postMessage({ mapping: this.SkaData.map(file, revReadFile) });
+
+        let results = JSON.parse(this.SkaData.map(file, revReadFile));
+
+        this.worker.postMessage({ nb_variants: results["Number of variants"], 
+                                  coverage: results["Coverage"], 
+                                  name: file.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz|.fq|.fq.gz|.fastq|.fastq.gz|_1.fq.gz|_1.fastq.gz)$/, ''),
+                                  mapped_sequences: results["Mapped sequences"],
+                                });
     }
 
 }

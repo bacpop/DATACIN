@@ -10,7 +10,6 @@
 //! (This could be made into a rust iterator, but I didn't do this when I wrote
 //! it as I didn't know how yet.)
 
-use std::borrow::Cow;
 use std::cmp::Ordering;
 
 use super::super::QualFilter;
@@ -31,7 +30,7 @@ pub struct SplitKmer<'a> {
     /// Mask to extract lower k-mer
     lower_mask: u128,
     /// Reference to input sequence
-    seq: Cow<'a, [u8]>,
+    seq: Vec<u8>,
     /// Size of seq
     seq_len: usize,
     /// Reference to sequence quality scores
@@ -76,7 +75,7 @@ impl<'a> SplitKmer<'a> {
     /// [`None`] if the end of the input has been reached.
     #[allow(clippy::too_many_arguments)]
     fn build(
-        seq: &[u8],
+        seq: Vec<u8>,
         seq_len: usize,
         qual: Option<&'a [u8]>,
         k: usize,
@@ -104,7 +103,7 @@ impl<'a> SplitKmer<'a> {
                 match i.cmp(&middle_idx) {
                     Ordering::Greater => {
                         lower <<= 2;
-                        lower |= (next_base as u128);
+                        lower |= next_base as u128;
                     }
                     Ordering::Less => {
                         upper <<= 2;
@@ -122,7 +121,7 @@ impl<'a> SplitKmer<'a> {
                     return None;
                 }
                 upper = 0;
-                lower =0;
+                lower = 0;
                 middle_base = 0;
                 i = 0;
             }
@@ -168,7 +167,7 @@ impl<'a> SplitKmer<'a> {
                 && !Self::valid_qual(self.index, self.qual, self.min_qual))
         {
             let new_kmer = Self::build(
-                &self.seq,
+                self.seq.clone(),
                 self.seq_len,
                 self.qual,
                 self.k,
@@ -196,12 +195,10 @@ impl<'a> SplitKmer<'a> {
             }
 
             // Update the k-mer
-            self.upper = (self.upper << 2
-                | ((self.middle_base as u128) << (half_k * 2)))
-                & self.upper_mask;
+            self.upper =
+                (self.upper << 2 | ((self.middle_base as u128) << (half_k * 2))) & self.upper_mask;
             self.middle_base = (self.lower >> (2 * (half_k - 1))) as u8;
-            self.lower =
-                ((self.lower << 2) | (new_base as u128)) & self.lower_mask;
+            self.lower = ((self.lower << 2) | (new_base as u128)) & self.lower_mask;
             if self.rc {
                 self.rc_lower = (self.rc_lower >> 2
                     | ((self.rc_middle_base as u128) << (2 * (half_k - 1))))
@@ -224,7 +221,7 @@ impl<'a> SplitKmer<'a> {
     /// no sequence, too many Ns).
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        seq: Cow<'a, [u8]>,
+        seq: Vec<u8>,
         seq_len: usize,
         qual: Option<&'a [u8]>,
         k: usize,
@@ -234,8 +231,9 @@ impl<'a> SplitKmer<'a> {
         is_reads: bool,
     ) -> Option<Self> {
         let mut index = 0;
+        let seq_copy = seq.clone();
         let first_kmer = Self::build(
-            &seq,
+            seq,
             seq_len,
             qual,
             k,
@@ -252,7 +250,7 @@ impl<'a> SplitKmer<'a> {
                 upper_mask,
                 lower_mask,
                 seq_len,
-                seq,
+                seq: seq_copy,
                 qual,
                 qual_filter,
                 min_qual,
