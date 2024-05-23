@@ -15,9 +15,9 @@ export default {
             }
         });
     },
-    async processQuery(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) {
+    async processQueryMap(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) {
         const { commit, state } = context;
-        console.log("Query files uploaded")
+        console.log("Query files uploaded mapping")
 
         const findReadPair = (fileName: string, files: Array<File>): { pairFile: File | undefined, sampleName: string } => {
             const baseName = fileName.replace(/(_1.fastq.gz|_1.fq.gz)$/, '');
@@ -48,7 +48,7 @@ export default {
             }
 
             if (sendJob) {
-                commit("addQueryFile", messageData.sampleName);
+                commit("addQueryFileMap", messageData.sampleName);
                 if (state.workerState.worker) {
                     state.workerState.worker.postMessage(messageData);
                     state.workerState.worker.onmessage = (message) => {
@@ -60,4 +60,12 @@ export default {
             }
         });
     },
+    async processQueryAlign(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) { // To be completed
+        const { commit, state } = context;
+        console.log("Query files uploaded alignment")
+
+        acceptFiles.forEach((file: File) => {
+            commit("addQueryFileAlign", file.name);
+        });
+    }
 };

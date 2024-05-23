@@ -9,14 +9,25 @@ export default {
         state.refSet = input.name;
         state.allResults.ref = input.sequences;
     },
-    addQueryFile(state: RootState, name: string) {
-        console.log("vuex: Adding query file " + name)
+
+    addQueryFileMap(state: RootState, name: string) {
+        console.log("vuex: Adding query file for mapping " + name)
         if (!state.allResults.mapResults[name]) {
             state.allResults.mapResults[name] = {
                 mapped: true,
                 nb_variants: null,
                 coverage: null,
                 mapped_sequences: [],
+            };
+        }
+    },
+
+    addQueryFileAlign(state: RootState, name: string) {
+        console.log("vuex: Adding query file for alignment " + name)
+        if (!state.allResults.alignResults[name]) {
+            state.allResults.alignResults[name] = {
+                aligned: true,
+                alignment: "",
             };
         }
     },

@@ -6,17 +6,32 @@
             <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
                 or click to select a file</p>
         </div>
-        <!-- dummy window after ref processed-->
+
         <div v-if="refProcessed" class="dropzone dropzone-ref">
             <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
         </div>
-        <div v-if="refProcessed" v-bind='getRootPropsQuery()' class="dropzone dropzone-query">
-            <input v-bind='getInputPropsQuery()' />
-            <p v-if='isDragActiveQuery' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be mapped</b> here,
-                or click to select files</p>
+
+        <!-- Mapping tab -->
+        <div v-if="tabName=='Mapping'">
+            <div v-if="refProcessed" v-bind='getRootPropsQueryMap()' class="dropzone dropzone-query">
+                <input v-bind='getInputPropsQueryMap()' />
+                <p v-if='isDragActiveQueryMap' class="dropzone-text">Drop the files here ...</p>
+                <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be mapped</b> here,
+                    or click to select files</p>
+            </div>
+            <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
         </div>
-        <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
+
+        <!-- Alignment tab -->
+        <div v-else-if="tabName=='Alignment'">
+            <div v-if="refProcessed" v-bind='getRootPropsQueryAlign()' class="dropzone dropzone-query">
+                <input v-bind='getInputPropsQueryAlign()' />
+                <p v-if='isDragActiveQueryAlign' class="dropzone-text">Drop the files here ...</p>
+                <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be aligned</b> here,
+                    or click to select files</p>
+            </div>
+            <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.alignResults).length }}</p>
+        </div>
     </div>
 </template>
 
@@ -26,15 +41,19 @@ import { useActions, useState } from "vuex-composition-helpers";
 
 export default {
     name: "DropZone",
+    props:["tabName"],
     setup() {
-        const { processRef, processQuery } = useActions(["processRef", "processQuery"]);
+        const { processRef, processQueryMap, processQueryAlign } = useActions(["processRef", "processQueryMap", "processQueryAlign"]);
         const { allResults } = useState(["allResults"]);
 
         function onDropRef(acceptFiles) {
             processRef(acceptFiles);
         }
-        function onDropQuery(acceptFiles) {
-            processQuery(acceptFiles);
+        function onDropQueryMap(acceptFiles) {
+            processQueryMap(acceptFiles);
+        }
+        function onDropQueryAlign(acceptFiles) {
+            processQueryAlign(acceptFiles);
         }
         const {
             getRootProps: getRootPropsRef,
@@ -47,27 +66,41 @@ export default {
             multiple: false
         });
         const {
-            getRootProps: getRootPropsQuery,
-            getInputProps: getInputPropsQuery,
-            isDragActive: isDragActiveQuery,
-            ...restQuery
+            getRootProps: getRootPropsQueryMap,
+            getInputProps: getInputPropsQueryMap,
+            isDragActive: isDragActiveQueryMap,
+            ...restQueryMap
         } = useDropzone({
-            onDrop: onDropQuery,
+            onDrop: onDropQueryMap,
             accept: [".fa", ".fasta", ".gz", ".fastq", ".fq"]
+        });
+        const {
+            getRootProps: getRootPropsQueryAlign,
+            getInputProps: getInputPropsQueryAlign,
+            isDragActive: isDragActiveQueryAlign,
+            ...restQueryAlign
+        } = useDropzone({
+            onDrop: onDropQueryAlign,
+            accept: [".fa", ".fasta", ".gz", ".fastq", ".fq"] // To be redifined
         });
 
         return {
             getRootPropsRef,
             getInputPropsRef,
             isDragActiveRef,
-            getRootPropsQuery,
-            getInputPropsQuery,
-            isDragActiveQuery,
+            getRootPropsQueryMap,
+            getInputPropsQueryMap,
+            isDragActiveQueryMap,
+            getRootPropsQueryAlign,
+            getInputPropsQueryAlign,
+            isDragActiveQueryAlign,
             onDropRef,
-            onDropQuery,
+            onDropQueryMap,
+            onDropQueryAlign,
             allResults,
             ...restRef,
-            ...restQuery
+            ...restQueryMap,
+            ...restQueryAlign
         };
     },
     computed: {
@@ -84,7 +117,6 @@ export default {
 <style>
 .dropzone {
     border: 2px dotted rgb(56, 55, 55);
-    width: 80%;
     margin: 10%;
     text-align: center;
     vertical-align: middle;
@@ -96,12 +128,12 @@ export default {
 
 .dropzone-ref {
     height: 75px;
-    margin-top: 100px;
+    margin-top: 30px;
     background-color: rgb(159, 176, 190);
 }
 
 .dropzone-query {
-    height: 200px;
+    height: 75px;
     margin-top: 10px;
     background-color: rgb(221, 249, 226);
 }

@@ -1,21 +1,43 @@
 <template>
     <div id="app">
-        <img src="datacin.png" alt="Datacin Logo" class="app-logo">
-        <DropZone />
-        <ResultsDisplay />
+        <div id="Header">
+            <img src="datacin.png" alt="Datacin Logo" class="app-logo">
+            <div id="tabs">
+                <button class="tab" v-on:click="changeTab('Mapping')">Mapping</button>
+                <button class="tab" v-on:click="changeTab('Alignment')">Alignment</button>
+            </div>
+        </div>
+        <div v-if="tabName === 'Mapping'">
+            <h1>Mapping</h1>
+            <DropZone 
+                tabName="Mapping"
+            />
+            <ResultsDisplayMapping />
+        </div>
+        <div v-else-if="tabName === 'Alignment'">
+            <h1>Alignment</h1>
+            <DropZone 
+                tabName="Alignment"
+            />
+        </div>
     </div>
 </template>
 
 <script>
 import DropZone from './components/DropZone.vue';
-import ResultsDisplay from './components/ResultsDisplay.vue';
+import ResultsDisplayMapping from './components/ResultsDisplayMapping.vue';
 import WorkerMapper from '@/workers/Mapper.worker.js';
 
 export default {
     name: 'App',
     components: {
         DropZone,
-        ResultsDisplay
+        ResultsDisplayMapping
+    },
+    data() {
+        return {
+            tabName: 'Mapping'
+        }
     },
     mounted: function () {
         console.log("Loading wasm module in a worker thread")
@@ -29,6 +51,12 @@ export default {
                 }
             });
     },
+
+    methods: {
+        changeTab: function (tab) {
+            this.tabName = tab;
+        }
+    }
 }
 
 </script>
@@ -40,13 +68,39 @@ export default {
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: 60px;
 }
 
 .app-logo {
-    position: absolute;
-    top: 10px;
-    left: 10px;
+    float: left;
     height: 75px;
 }
+
+#Header {
+    height: 75px;
+    margin-top: 0px;
+}
+
+#tabs {
+    float: left;
+    margin-left: 30px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.tab {
+    background-color: #f2f2f2;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 14px 16px;
+    border: 1px solid black;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.tab:hover {
+    background-color: #ddd;
+}
+
 </style>

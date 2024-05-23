@@ -4,6 +4,7 @@ export const emptyState = (): RootState => ({
     refSet: null,
     allResults: {
         mapResults: {},
+        alignResults: {},
         ref: [],
     },
     workerState: {

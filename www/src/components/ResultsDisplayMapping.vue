@@ -60,13 +60,13 @@
                 <SequenceViewer 
                     :zoom_level="zoom"
                     :no_skip="!skip"
-                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reload -->
                 </SequenceViewer>
             </div>
             <div v-else id="MinimisedViewer">
                 <MinimisedSequenceViewer 
                     :zoom_level="zoom"
-                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reload -->
                 </MinimisedSequenceViewer>
             </div>
         </div>
@@ -83,7 +83,7 @@ import Popper from "vue3-popper";
 import DownloadButton from "./SequenceViewer/DownloadButton.vue";
 
 export default {
-    name: "ResultsDisplay",
+    name: "ResultsDisplayMapping",
     components: {
         SequenceViewer,
         VueSlider,
@@ -156,7 +156,6 @@ export default {
 
 
   #band {
-    width: 100%;
     margin-left: 20px;
   }
 
@@ -185,7 +184,6 @@ export default {
   }
 
   #table {
-    width: 100%;
     float: left;
     text-align: left;
     margin-left: 50px;
