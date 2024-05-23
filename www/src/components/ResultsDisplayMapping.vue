@@ -107,7 +107,7 @@ export default {
         'allResults.mapResults': {
             handler() {
                 let last_key = Object.keys(this.allResults.mapResults)[Object.keys(this.allResults.mapResults).length-1]
-                if (this.allResults.mapResults[last_key].mapped_sequences.length !== 0){
+                if (this.allResults.mapResults[last_key]? this.allResults.mapResults[last_key].mapped_sequences.length !== 0: false){
                     this.reloadKey++;
                 }
             },

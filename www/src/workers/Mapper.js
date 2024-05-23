@@ -20,11 +20,11 @@ export class Mapper {
         return this.wasm ? Promise.resolve(this.wasm) : this.wasmPromise;
     }
 
-    async set_ref(file) {
+    async set_ref(file, k) {
         await this.waitForWasm();
 
         if (this.SkaData === null) {
-            this.SkaData = this.wasm.SkaData.new(file);
+            this.SkaData = this.wasm.SkaData.new(file, k);
         }
         this.worker.postMessage({ ref: file, sequences: this.SkaData.get_reference().split('\n') });
     }

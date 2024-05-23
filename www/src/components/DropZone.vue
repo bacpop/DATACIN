@@ -1,36 +1,60 @@
 <template>
     <div>
-        <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
-            <input v-bind='getInputPropsRef()' />
-            <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
-            <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
-                or click to select a file</p>
+        <h1>{{tabName}}</h1>
+        <div v-if="!param" id="parameters">
+            <h3 class="parameters_legends" style="margin-bottom: 5px;">Parameters choice:</h3>
+            <h5 class="parameters_legends" v-bind="k">k: {{ k }}</h5>
+            <VueSlider 
+                v-model="k" 
+                :lazy="true" 
+                :min="5"
+                :max="61"
+                :interval="2"
+                >
+            </VueSlider>
+            <button @click="param=true" style="float: left; margin-top: 7px;">Validate parameter choice</button>
         </div>
 
-        <div v-if="refProcessed" class="dropzone dropzone-ref">
-            <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
-        </div>
-
-        <!-- Mapping tab -->
-        <div v-if="tabName=='Mapping'">
-            <div v-if="refProcessed" v-bind='getRootPropsQueryMap()' class="dropzone dropzone-query">
-                <input v-bind='getInputPropsQueryMap()' />
-                <p v-if='isDragActiveQueryMap' class="dropzone-text">Drop the files here ...</p>
-                <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be mapped</b> here,
-                    or click to select files</p>
+        <div v-if="param" id="parameters">
+            <h3 class="parameters_legends" style="margin-bottom: 5px;">Current parameters:</h3>
+            <h5 class="parameters_legends" v-bind="k">k: {{ k }}</h5>
+            <div style="display: flex; justify-content: flex-start;">
+                <button @click="resetAll" style="margin-top: 7px;">Reset parameters</button>
             </div>
-            <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
         </div>
 
-        <!-- Alignment tab -->
-        <div v-else-if="tabName=='Alignment'">
-            <div v-if="refProcessed" v-bind='getRootPropsQueryAlign()' class="dropzone dropzone-query">
-                <input v-bind='getInputPropsQueryAlign()' />
-                <p v-if='isDragActiveQueryAlign' class="dropzone-text">Drop the files here ...</p>
-                <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be aligned</b> here,
-                    or click to select files</p>
+        <div v-if="param">
+            <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
+                <input v-bind='getInputPropsRef()' />
+                <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
+                <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
+                    or click to select a file</p>
             </div>
-            <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.alignResults).length }}</p>
+            <div v-if="refProcessed" class="dropzone dropzone-ref">
+                <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
+            </div>
+
+            <!-- Mapping tab -->
+            <div v-if="tabName=='Mapping'">
+                <div v-if="refProcessed" v-bind='getRootPropsQueryMap()' class="dropzone dropzone-query">
+                    <input v-bind='getInputPropsQueryMap()' />
+                    <p v-if='isDragActiveQueryMap' class="dropzone-text">Drop the files here ...</p>
+                    <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be mapped</b> here,
+                        or click to select files</p>
+                </div>
+                <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.mapResults).length }}</p>
+            </div>
+
+            <!-- Alignment tab -->
+            <div v-else-if="tabName=='Alignment'">
+                <div v-if="refProcessed" v-bind='getRootPropsQueryAlign()' class="dropzone dropzone-query">
+                    <input v-bind='getInputPropsQueryAlign()' />
+                    <p v-if='isDragActiveQueryAlign' class="dropzone-text">Drop the files here ...</p>
+                    <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be aligned</b> here,
+                        or click to select files</p>
+                </div>
+                <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.alignResults).length }}</p>
+            </div>
         </div>
     </div>
 </template>
@@ -38,22 +62,34 @@
 <script>
 import { useDropzone } from "vue3-dropzone";
 import { useActions, useState } from "vuex-composition-helpers";
+import VueSlider from 'vue-3-slider-component'
+import { ref } from "vue";
 
 export default {
     name: "DropZone",
     props:["tabName"],
+    components: {
+        VueSlider
+    },
     setup() {
-        const { processRef, processQueryMap, processQueryAlign } = useActions(["processRef", "processQueryMap", "processQueryAlign"]);
+        let k = ref(31);
+        let param = ref(false);
+
+        const { processRef, processQueryMap, processQueryAlign, resetAllResults } = useActions(["processRef", "processQueryMap", "processQueryAlign", "resetAllResults"]);
         const { allResults } = useState(["allResults"]);
 
         function onDropRef(acceptFiles) {
-            processRef(acceptFiles);
+            processRef({acceptFiles: acceptFiles, k: k.value});
         }
         function onDropQueryMap(acceptFiles) {
             processQueryMap(acceptFiles);
         }
         function onDropQueryAlign(acceptFiles) {
             processQueryAlign(acceptFiles);
+        }
+        function resetAll() {
+            param.value = false;
+            resetAllResults();
         }
         const {
             getRootProps: getRootPropsRef,
@@ -85,6 +121,9 @@ export default {
         });
 
         return {
+            k,
+            param,
+            resetAll,
             getRootPropsRef,
             getInputPropsRef,
             isDragActiveRef,
@@ -110,7 +149,14 @@ export default {
         refName() {
             return this.$store.getters.refName;
         }
-    }
+    },
+
+    methods: {
+        clear() {
+            resetAll()
+        }
+    },
+
 };
 </script>
 
@@ -128,7 +174,7 @@ export default {
 
 .dropzone-ref {
     height: 75px;
-    margin-top: 30px;
+    margin-top: 20px;
     background-color: rgb(159, 176, 190);
 }
 
@@ -144,5 +190,15 @@ export default {
 
 .monospace {
     font-family: 'Courier New', monospace;
+}
+
+#parameters {
+    margin: 1% 10%;
+}
+
+.parameters_legends {
+    text-align: left; 
+    margin: 0px;
+    width: 70%;
 }
 </style>

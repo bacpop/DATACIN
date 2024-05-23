@@ -2,12 +2,12 @@ import { ActionContext } from "vuex";
 import { RootState } from "@/store/state";
 
 export default {
-    async processRef(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) {
+    async processRef(context: ActionContext<RootState, RootState>, payload: { acceptFiles: Array<File>, k: number }) {
         const { commit, state } = context;
-        console.log("Ref file uploaded")
-        acceptFiles.forEach((file: File) => {
+        console.log("Ref file uploaded, k = " + payload.k)
+        payload.acceptFiles.forEach((file: File) => {
             if (state.workerState.worker) {
-                state.workerState.worker.postMessage({ref: true, file});
+                state.workerState.worker.postMessage({ref: true, file, k : payload.k});
                 state.workerState.worker.onmessage = (messageData) => {
                     console.log(messageData.data.ref.name + " has been indexed");
                     commit("addRef", {name: messageData.data.ref.name, sequences:messageData.data.sequences});
@@ -61,11 +61,16 @@ export default {
         });
     },
     async processQueryAlign(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) { // To be completed
-        const { commit, state } = context;
+        const { commit } = context;
         console.log("Query files uploaded alignment")
 
         acceptFiles.forEach((file: File) => {
             commit("addQueryFileAlign", file.name);
         });
+    },
+
+    async resetAllResults(context: ActionContext<RootState, RootState>, payload: null) {
+        const { commit } = context;
+        commit("resetAllResults");
     }
 };

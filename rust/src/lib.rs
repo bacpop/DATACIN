@@ -53,12 +53,11 @@ pub struct SkaData {
 
 #[wasm_bindgen]
 impl SkaData {
-    pub fn new(ref_file: web_sys::File) -> Self {
+    pub fn new(ref_file: web_sys::File, k: usize) -> Self {
         if cfg!(debug_assertions) {
             init_panic_hook();
         }
 
-        let k = 31;
         let rc = true;
         let ambig_mask = false;
         let repeat_mask = false;

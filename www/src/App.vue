@@ -7,18 +7,11 @@
                 <button class="tab" v-on:click="changeTab('Alignment')">Alignment</button>
             </div>
         </div>
+        <DropZone 
+            :tabName="tabName"
+        />
         <div v-if="tabName === 'Mapping'">
-            <h1>Mapping</h1>
-            <DropZone 
-                tabName="Mapping"
-            />
             <ResultsDisplayMapping />
-        </div>
-        <div v-else-if="tabName === 'Alignment'">
-            <h1>Alignment</h1>
-            <DropZone 
-                tabName="Alignment"
-            />
         </div>
     </div>
 </template>

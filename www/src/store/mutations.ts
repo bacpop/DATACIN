@@ -38,4 +38,13 @@ export default {
         state.allResults.mapResults[input.name].coverage = input.coverage
         state.allResults.mapResults[input.name].mapped_sequences = input.mapped_sequences
     },
+
+    resetAllResults(state: RootState) {
+        state.refSet= null;
+        state.allResults= {
+            mapResults: {},
+            alignResults: {},
+            ref: [],
+        };
+    }
 };
