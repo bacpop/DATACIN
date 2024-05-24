@@ -24,6 +24,7 @@ impl SkaMap {
         file1: &mut F,
         file2: Option<&mut F>,
         file_type: &str,
+        proportions_reads: Option<f64>,
     ) -> Self {
         // TODO - two files. Should just be able to add an 'add more k-mers' method on the struct to accept second file if given
         let mut query_ska = SkaDict::new(
@@ -38,9 +39,10 @@ impl SkaMap {
                 qual_filter: QualFilter::NoFilter,
             },
             file_type,
+            proportions_reads,
         );
         if let Some(second_file) = file2 {
-            query_ska.add_file_kmers(second_file, file_type);
+            query_ska.add_file_kmers(second_file, file_type, proportions_reads);
         }
         let mut mapped_bases = Vec::new();
         for ref_kmer in reference.kmer_iter() {

@@ -12,12 +12,22 @@
                 :interval="2"
                 >
             </VueSlider>
+            <h5 class="parameters_legends" v-bind="proportion_reads">Proportion of reads: {{ proportion_reads }}</h5>
+            <VueSlider 
+                v-model="proportion_reads" 
+                :lazy="true" 
+                :min="0"
+                :max="1"
+                :interval="0.05"
+                >
+            </VueSlider>
             <button @click="param=true" style="float: left; margin-top: 7px;">Validate parameter choice</button>
         </div>
 
         <div v-if="param" id="parameters">
             <h3 class="parameters_legends" style="margin-bottom: 5px;">Current parameters:</h3>
             <h5 class="parameters_legends" v-bind="k">k: {{ k }}</h5>
+            <h5 class="parameters_legends" v-bind="proportion_reads">Proportion of reads: {{ proportion_reads }}</h5>
             <div style="display: flex; justify-content: flex-start;">
                 <button @click="resetAll" style="margin-top: 7px;">Reset parameters</button>
             </div>
@@ -73,6 +83,7 @@ export default {
     },
     setup() {
         let k = ref(31);
+        let proportion_reads = ref(1);
         let param = ref(false);
 
         const { processRef, processQueryMap, processQueryAlign, resetAllResults } = useActions(["processRef", "processQueryMap", "processQueryAlign", "resetAllResults"]);
@@ -82,7 +93,7 @@ export default {
             processRef({acceptFiles: acceptFiles, k: k.value});
         }
         function onDropQueryMap(acceptFiles) {
-            processQueryMap(acceptFiles);
+            processQueryMap({acceptFiles: acceptFiles, proportion_reads: proportion_reads.value});
         }
         function onDropQueryAlign(acceptFiles) {
             processQueryAlign(acceptFiles);
@@ -122,6 +133,7 @@ export default {
 
         return {
             k,
+            proportion_reads,
             param,
             resetAll,
             getRootPropsRef,

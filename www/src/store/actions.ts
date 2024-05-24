@@ -15,7 +15,7 @@ export default {
             }
         });
     },
-    async processQueryMap(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) {
+    async processQueryMap(context: ActionContext<RootState, RootState>, payload: {acceptFiles: Array<File>, proportion_reads: number}) {
         const { commit, state } = context;
         console.log("Query files uploaded mapping")
 
@@ -27,11 +27,11 @@ export default {
             return { pairFile, sampleName: baseName };
         };
 
-        acceptFiles.forEach((file: File) => {
+        payload.acceptFiles.forEach((file: File) => {
             let sendJob: boolean = false;
-            const messageData: any = { map: true, file, revReads: null, sampleName: null };
+            const messageData: any = { map: true, file, revReads: null, sampleName: null, proportion_reads: payload.proportion_reads };
             if (/(_1|_2)(.fastq.gz|.fq.gz)$/.test(file.name)) {
-                const { pairFile, sampleName } = findReadPair(file.name, acceptFiles);
+                const { pairFile, sampleName } = findReadPair(file.name, payload.acceptFiles);
                 messageData.sampleName = sampleName;
                 if (pairFile) {
                     messageData.revReads = pairFile;
@@ -69,7 +69,7 @@ export default {
         });
     },
 
-    async resetAllResults(context: ActionContext<RootState, RootState>, payload: null) {
+    async resetAllResults(context: ActionContext<RootState, RootState>) {
         const { commit } = context;
         commit("resetAllResults");
     }

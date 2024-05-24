@@ -77,7 +77,7 @@ impl SkaData {
         }
     }
 
-    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> String {
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>, proportion_reads: Option<f64>) -> String {
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
@@ -92,10 +92,11 @@ impl SkaData {
                 &mut wf1,
                 Some(&mut WebSysFile::new(second_file)),
                 file_type,
+                proportion_reads,
             ));
         } else {
             self.mapped
-                .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
+                .push(SkaMap::new(&self.reference, &mut wf1, None, file_type, proportion_reads));
         };
 
         log("Reads mapped successfully!");

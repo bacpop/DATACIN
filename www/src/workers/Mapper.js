@@ -29,12 +29,13 @@ export class Mapper {
         this.worker.postMessage({ ref: file, sequences: this.SkaData.get_reference().split('\n') });
     }
 
-    map(file, revReadFile) {
+    map(file, revReadFile, proportion_reads) {
+        console.log("Mapping reads to reference with proportion_reads: " + proportion_reads);
         if (this.SkaData === null) {
             throw new Error("SkaRef::map - reference does not exist yet.");
         }
 
-        let results = JSON.parse(this.SkaData.map(file, revReadFile));
+        let results = JSON.parse(this.SkaData.map(file, revReadFile, proportion_reads));
 
         this.worker.postMessage({ nb_variants: results["Number of variants"], 
                                   coverage: results["Coverage"], 

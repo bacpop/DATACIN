@@ -103,7 +103,7 @@ impl SkaDict {
     
     /// Iterates through all the k-mers from an input fastx file and adds them
     /// to the dictionary
-    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str) {
+    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str, proportion_reads: Option<f64>) {
 
         enum ReaderType<'a, F: Read + 'a> {
             Fasta(FastaReader<ReaderEnum<'a, F>>), // replace with actual type
@@ -120,13 +120,16 @@ impl SkaDict {
             panic!("Unsupported file type")
         }
 
+        let step = (1 as f64 / proportion_reads.unwrap()).round() as usize;
+
+        let mut iter_reads = 0;
         while let Some((seq, seq_len)) = match reader {
             ReaderType::Fasta(ref mut r) => {
                 if let Some(record) = r.next(){
                     let seqrec = record.expect("Invalid FASTA record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
+                    let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
                     None
@@ -137,13 +140,20 @@ impl SkaDict {
                     let seqrec = record.expect("Invalid FASTQ record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
+                    let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
                     None
                 }
             }
         } {
+            if iter_reads % step != 0 {
+                iter_reads += 1;
+                continue;
+            } else {
+                iter_reads += 1;
+            }
+
             let kmer_opt = SplitKmer::new(
                 seq,
                 seq_len,
@@ -230,6 +240,7 @@ impl SkaDict {
         rc: bool,
         qual: &QualOpts,
         file_type: &str,
+        proportion_reads: Option<f64>,
     ) -> Self {
         if !(5..=63).contains(&k) || k % 2 == 0 {
             panic!("Invalid k-mer length");
@@ -263,7 +274,7 @@ impl SkaDict {
         */
 
         // Build the dict
-        sk_dict.add_file_kmers(input_file, file_type);
+        sk_dict.add_file_kmers(input_file, file_type, proportion_reads);
 
         if sk_dict.ksize() == 0 {
             panic!("File has no valid sequence");
