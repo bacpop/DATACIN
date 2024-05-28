@@ -2,7 +2,7 @@
     <div v-if="queryProcessed" class="variants"> 
         <div id="band" style="height: 30px">
             <div v-if="filesUploaded" class="checkbox">
-                <input type="checkbox" id="visualisation" v-model="visualisation"/>
+                <input type="checkbox" id="visualisation" @click="reset_zoom" v-model="visualisation"/>
                 <label for="visualisation">See visualisation</label>
             </div>
             <div v-if="zoom>8 && visualisation" class="checkbox">
@@ -95,11 +95,13 @@ export default {
         const { allResults } = useState(["allResults"]);
         const visualisation = ref(false);
         const skip = ref(true);
+        const zoom = ref(10);
 
         return {
             allResults,
             visualisation,
-            skip
+            skip,
+            zoom
         }
     },
 
@@ -109,6 +111,10 @@ export default {
                 let last_key = Object.keys(this.allResults.mapResults)[Object.keys(this.allResults.mapResults).length-1]
                 if (this.allResults.mapResults[last_key]? this.allResults.mapResults[last_key].mapped_sequences.length !== 0: false){
                     this.reloadKey++;
+                }
+                else {
+                    this.zoom = 10;
+                    this.visualisation = false;
                 }
             },
             deep: true,
@@ -131,12 +137,14 @@ export default {
     methods: {
         use_keys(list_of_keys) {
             return list_of_keys.join('-');
+        },
+        reset_zoom() {
+            this.zoom = 10;
         }
     },
     
     data() {
         return {
-            zoom: 10,
             reloadKey: 0
         }
     },
