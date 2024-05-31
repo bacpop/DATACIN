@@ -11,12 +11,13 @@ export interface IsolateMapping {
     mapped_sequences?: string[]
 }
 
-export interface IsolateAlignment {
+export interface Alignment {
     aligned: boolean
-    alignment?: string
+    names?: string[]
+    pairwiseAlignment?: number[][]
 }
 export interface AllResults {
-    alignResults: Dict<IsolateAlignment>
+    alignResults: Dict<Alignment>
     mapResults: Dict<IsolateMapping>
     ref: string[]
 }

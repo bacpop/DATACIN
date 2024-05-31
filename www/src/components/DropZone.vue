@@ -65,7 +65,7 @@
                     <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be aligned</b> here,
                         or click to select files</p>
                 </div>
-                <p class="count"> Files received: {{ Object.keys(allResults.alignResults).length }}</p>
+                <p class="count"> Files received: {{ allResults.alignResults[0]? allResults.alignResults[0].names.length : 0 }}</p>
             </div>
         </div>
     </div>
@@ -98,7 +98,7 @@ export default {
             processQueryMap({acceptFiles: acceptFiles, proportion_reads: proportion_reads.value});
         }
         function onDropQueryAlign(acceptFiles) {
-            processQueryAlign(acceptFiles);
+            processQueryAlign({acceptFiles: acceptFiles, k: k.value, proportion_reads: proportion_reads.value});
         }
         function resetAll() {
             param.value = false;

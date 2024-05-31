@@ -13,19 +13,24 @@
         <div v-if="tabName === 'Mapping'">
             <ResultsDisplayMapping />
         </div>
+        <div v-else-if="tabName === 'Alignment'">
+            <ResultsDisplayAlignment />
+        </div>
     </div>
 </template>
 
 <script>
 import DropZone from './components/DropZone.vue';
 import ResultsDisplayMapping from './components/ResultsDisplayMapping.vue';
+import ResultsDisplayAlignment from './components/ResultsDisplayAlignment.vue';
 import WorkerMapper from '@/workers/Mapper.worker.js';
 
 export default {
     name: 'App',
     components: {
         DropZone,
-        ResultsDisplayMapping
+        ResultsDisplayMapping,
+        ResultsDisplayAlignment
     },
     data() {
         return {

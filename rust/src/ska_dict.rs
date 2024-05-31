@@ -307,6 +307,11 @@ impl SkaDict {
         &self.split_kmers
     }
 
+    /// Iter over the split k-mers
+    pub fn kmer_iter(&self) -> impl Iterator<Item = (&u128, &u8)> {
+        self.split_kmers.iter()
+    }
+
     /// Sample name
     pub fn name(&self) -> &String {
         &self.name

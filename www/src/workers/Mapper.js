@@ -6,6 +6,7 @@ export class Mapper {
     constructor(worker) {
         this.worker = worker;
         this.SkaData = null;
+        this.AlignData = null;
         this.wasm = null;
         this.wasmPromise = new Promise(resolve => {
             import("@/pkg")
@@ -44,4 +45,24 @@ export class Mapper {
                                 });
     }
 
+    align(files, proportion_reads, k) {
+        console.log("Aligning reads to reference with proportion_reads: " + proportion_reads + " and k: " + k);
+
+        if (this.AlignData === null) {
+            this.AlignData = this.wasm.AlignData.new(k);
+        }
+
+        let results = JSON.parse(this.AlignData.align(files, proportion_reads));
+
+        let names = files.map(f => f.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz|.fq|.fq.gz|.fastq|.fastq.gz|_1.fq.gz|_1.fastq.gz)$/, ''));
+
+        this.worker.postMessage({ names: names,
+                                  pairwiseAlignment: results["Pairwise distances"],
+                                });
+    }
+
+    resetAll() {
+        this.SkaData = null;
+        this.AlignData = null;
+    }
 }

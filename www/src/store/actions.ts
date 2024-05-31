@@ -18,7 +18,6 @@ export default {
     async processQueryMap(context: ActionContext<RootState, RootState>, payload: {acceptFiles: Array<File>, proportion_reads: number}) {
         const { commit, state } = context;
         console.log("Query files uploaded mapping")
-
         const findReadPair = (fileName: string, files: Array<File>): { pairFile: File | undefined, sampleName: string } => {
             const baseName = fileName.replace(/(_1.fastq.gz|_1.fq.gz)$/, '');
             const pairNameFastq = baseName + '_2.fastq.gz';
@@ -60,13 +59,19 @@ export default {
             }
         });
     },
-    async processQueryAlign(context: ActionContext<RootState, RootState>, acceptFiles: Array<File>) { // To be completed
-        const { commit } = context;
+
+    async processQueryAlign(context: ActionContext<RootState, RootState>, payload: { acceptFiles: Array<File>, k: number, proportion_reads: number }) {
+        const { commit, state } = context;
         console.log("Query files uploaded alignment")
 
-        acceptFiles.forEach((file: File) => {
-            commit("addQueryFileAlign", file.name);
-        });
+        const messageData = { align: true, files: payload.acceptFiles, k: payload.k, proportion_reads: payload.proportion_reads};
+        
+        if (state.workerState.worker) {
+            state.workerState.worker.postMessage(messageData);
+            state.workerState.worker.onmessage = (message) => {
+                commit("setAligned", message.data);
+            };
+        }
     },
 
     async resetAllResults(context: ActionContext<RootState, RootState>) {

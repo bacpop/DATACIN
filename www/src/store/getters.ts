@@ -12,5 +12,8 @@ export const getters: GetterTree<RootState, RootState> = {
     queryProcessed(state: RootState) {
         const first_input: string = Object.keys(state.allResults.mapResults)[0]
         return state.allResults.mapResults[first_input] ? state.allResults.mapResults[first_input].mapped : false;
+    },
+    alignmentProcessed(state: RootState) {
+        return state.allResults.alignResults[0] ? state.allResults.alignResults[0].aligned : false;
     }
 }

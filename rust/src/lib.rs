@@ -7,7 +7,10 @@ pub mod ska_ref;
 use crate::ska_ref::RefSka;
 pub mod ska_dict;
 pub mod ska_map;
+pub mod ska_align;
+
 use crate::ska_map::SkaMap;
+use crate::ska_align::SkaAlign;
 
 use json;
 
@@ -156,4 +159,53 @@ pub fn reconstruct_sequence(reference: &RefSka) -> Vec<String> {
     }
 
     return sequence_string;
+}
+
+#[wasm_bindgen]
+pub struct AlignData {
+    alignment: SkaAlign,
+}
+
+#[wasm_bindgen]
+impl AlignData {
+    pub fn new(k: usize) -> Self {
+        Self {
+            alignment: SkaAlign::new(k),
+        }
+    }
+
+    pub fn align(&mut self, input_files: Vec<web_sys::File>, proportion_reads: Option<f64>) -> String {
+        log(&format!("Aligning reads"));
+
+        let mut wf1: WebSysFile;
+
+        for input_file in input_files {
+            let file_name = input_file.name();
+            let file_type = file_name.split('.').nth(1).unwrap();   
+            wf1 = WebSysFile::new(input_file);
+            
+            self.alignment.add_file(
+                &mut wf1,
+                file_type,
+                proportion_reads,
+            );
+        }
+
+        let pairwise_distances = self.alignment.align();
+
+        let mut results = json::JsonValue::new_array();
+
+        results["Pairwise distances"] = json::JsonValue::new_array();
+        let len_pairwise_distances = pairwise_distances.len();
+
+        for i in 0..len_pairwise_distances {
+            let mut pairwise_distances_result = json::JsonValue::new_array();
+            for j in 0..len_pairwise_distances {
+                let _ = pairwise_distances_result.push(pairwise_distances[i][j]);
+            }
+            let _ = results["Pairwise distances"].push(pairwise_distances_result);
+        }
+
+        results.dump()
+    }
 }
