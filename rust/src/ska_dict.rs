@@ -112,9 +112,9 @@ impl SkaDict {
 
         let mut reader;
 
-        if ["fasta", "fa", "fa.gz", "fasta.gz"].contains(&file_type) {
+        if ["fasta", "fa"].contains(&file_type) {
             reader = ReaderType::Fasta(open_fasta(file));
-        } else if ["fastq", "fq", "fq.gz", "fastq.gz"].contains(&file_type) {
+        } else if ["fastq", "fq"].contains(&file_type) {
             reader = ReaderType::Fastq(open_fastq(file));
         } else {
             panic!("Unsupported file type")

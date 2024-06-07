@@ -86,7 +86,10 @@ impl SkaData {
         }
         log(&format!("Mapping reads to reference"));
         let file_name = input_file.name();
-        let file_type = file_name.split('.').nth(1).unwrap();
+        let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
+        if file_type == "gz" { 
+            file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
+        }
         let mut wf1 = WebSysFile::new(input_file);
 
         if let Some(second_file) = rev_reads {
