@@ -4,17 +4,19 @@ use crate::ska_dict::SkaDict;
 use crate::QualFilter;
 use crate::QualOpts;
 
+use speedytree::DistanceMatrix;
+use speedytree::{NeighborJoiningSolver, Canonical};
+
 #[derive(Debug, Clone, Default)]
 pub struct SkaAlign {
     /// Positions of mapped bases as (chrom, pos)
     queries_ska: Vec<SkaDict>,
-    pairwise_distances: Vec<Vec<usize>>,
     k: usize,
 }
 
 impl SkaAlign {
     pub fn new(k: usize) -> Self {
-        Self { queries_ska: Vec::new(), pairwise_distances: Vec::new(), k }
+        Self { queries_ska: Vec::new(), k }
     }
 
     pub fn add_file<F: Read>(
@@ -39,10 +41,15 @@ impl SkaAlign {
         ));
     }
 
-    pub fn align(&mut self) -> Vec<Vec<usize>> {
+    pub fn align(&mut self, file_names: &Vec<String>) -> String {
         let mut pairwise_distances = vec![vec![0; self.queries_ska.len()]; self.queries_ska.len()];
+
+        let mut phylip_format = "".to_string();
+        phylip_format += format!("{}\n", self.queries_ska.len()).as_str();
+
         for i in 0..self.queries_ska.len() {
-            for j in (i+1)..self.queries_ska.len() {
+            phylip_format += format!("{}\t", file_names[i]).as_str();
+            for j in 0..self.queries_ska.len() { // Do it on only half of the matrix
                 for ref_kmer in self.queries_ska[i].kmer_iter() {
                     if let Some(kmer_match) = self.queries_ska[j].kmers().get(&ref_kmer.0) {
                         if *kmer_match != *ref_kmer.1 {
@@ -50,10 +57,20 @@ impl SkaAlign {
                         }
                     }
                 }
+                phylip_format += format!("{}\t", pairwise_distances[i][j]).as_str();
             }
+            phylip_format += "\n";
         }
-        let cloned_pairwise_distances = pairwise_distances.clone();
-        self.pairwise_distances = cloned_pairwise_distances;
-        pairwise_distances
+
+        let d = DistanceMatrix::read_from_phylip(phylip_format.as_bytes()).unwrap();
+        let tree = NeighborJoiningSolver::<Canonical>::default(d.clone())
+            .solve()
+            .unwrap();
+        let newick = speedytree::to_newick(&tree);
+        newick
+    }
+
+    pub fn get_size(&self) -> usize {
+        self.queries_ska.len()
     }
 }

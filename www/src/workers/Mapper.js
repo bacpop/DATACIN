@@ -54,10 +54,8 @@ export class Mapper {
 
         let results = JSON.parse(this.AlignData.align(files, proportion_reads));
 
-        let names = files.map(f => f.name.replace(/(.fasta|.fasta.gz|.fa|.fa.gz|.fq|.fq.gz|.fastq|.fastq.gz|_1.fq.gz|_1.fastq.gz)$/, ''));
-
-        this.worker.postMessage({ names: names,
-                                  pairwiseAlignment: results["Pairwise distances"],
+        this.worker.postMessage({ names: results["names"],
+                                  newick: results["newick"],
                                 });
     }
 

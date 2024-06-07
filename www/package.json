@@ -11,6 +11,8 @@
     "@tanstack/vue-virtual": "^3.5.0",
     "core-js": "^3.8.3",
     "d3": "^7.9.0",
+    "newick": "^2.0.0",
+    "phylotree": "^2.0.1",
     "vue": "^3.2.13",
     "vue-3-slider-component": "^0.1.4",
     "vue-class-component": "^8.0.0-0",

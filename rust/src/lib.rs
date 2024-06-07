@@ -164,6 +164,7 @@ pub fn reconstruct_sequence(reference: &RefSka) -> Vec<String> {
 #[wasm_bindgen]
 pub struct AlignData {
     alignment: SkaAlign,
+    file_names: Vec<String>,
 }
 
 #[wasm_bindgen]
@@ -171,6 +172,7 @@ impl AlignData {
     pub fn new(k: usize) -> Self {
         Self {
             alignment: SkaAlign::new(k),
+            file_names: Vec::new(),
         }
     }
 
@@ -181,6 +183,7 @@ impl AlignData {
 
         for input_file in input_files {
             let file_name = input_file.name();
+            self.file_names.push(file_name.clone().split('.').nth(0).unwrap().to_string());
             let file_type = file_name.split('.').nth(1).unwrap();   
             wf1 = WebSysFile::new(input_file);
             
@@ -191,21 +194,26 @@ impl AlignData {
             );
         }
 
-        let pairwise_distances = self.alignment.align();
+        if self.alignment.get_size() <= 2 {
+            let mut results = json::JsonValue::new_array();
+            results["newick"] = "Not enough sequences to align".into();
+            results["names"] = json::JsonValue::new_array();
+            for name in &self.file_names {
+                let _ = results["names"].push(name.to_string());
+            }
+
+            return results.dump()
+        }
+
+        let newick = self.alignment.align(&self.file_names);
 
         let mut results = json::JsonValue::new_array();
 
-        results["Pairwise distances"] = json::JsonValue::new_array();
-        let len_pairwise_distances = pairwise_distances.len();
-
-        for i in 0..len_pairwise_distances {
-            let mut pairwise_distances_result = json::JsonValue::new_array();
-            for j in 0..len_pairwise_distances {
-                let _ = pairwise_distances_result.push(pairwise_distances[i][j]);
+        results["newick"] = newick.into();
+        results["names"] = json::JsonValue::new_array();
+            for name in &self.file_names {
+                let _ = results["names"].push(name.to_string());
             }
-            let _ = results["Pairwise distances"].push(pairwise_distances_result);
-        }
-
         results.dump()
     }
 }

@@ -14,7 +14,7 @@ export interface IsolateMapping {
 export interface Alignment {
     aligned: boolean
     names?: string[]
-    pairwiseAlignment?: number[][]
+    newick?: string
 }
 export interface AllResults {
     alignResults: Dict<Alignment>
