@@ -100,11 +100,10 @@ impl SkaDict {
                 _ => panic!("Base encoding error: {}", base as char),
             });
     }
-
-
+    
     /// Iterates through all the k-mers from an input fastx file and adds them
     /// to the dictionary
-    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str) {
+    pub fn add_file_kmers<F: Read>(&mut self, file: &mut F, file_type: &str, proportion_reads: Option<f64>) {
 
         enum ReaderType<'a, F: Read + 'a> {
             Fasta(FastaReader<ReaderEnum<'a, F>>), // replace with actual type
@@ -113,21 +112,24 @@ impl SkaDict {
 
         let mut reader;
 
-        if ["fasta", "fa", "fa.gz", "fasta.gz"].contains(&file_type) {
+        if ["fasta", "fa"].contains(&file_type) {
             reader = ReaderType::Fasta(open_fasta(file));
-        } else if ["fastq", "fq", "fq.gz", "fastq.gz"].contains(&file_type) {
+        } else if ["fastq", "fq"].contains(&file_type) {
             reader = ReaderType::Fastq(open_fastq(file));
         } else {
             panic!("Unsupported file type")
         }
 
+        let step = (1 as f64 / proportion_reads.unwrap()).round() as usize;
+
+        let mut iter_reads = 0;
         while let Some((seq, seq_len)) = match reader {
             ReaderType::Fasta(ref mut r) => {
                 if let Some(record) = r.next(){
                     let seqrec = record.expect("Invalid FASTA record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
+                    let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
                     None
@@ -138,13 +140,20 @@ impl SkaDict {
                     let seqrec = record.expect("Invalid FASTQ record");
                     // There can be \n in the sequence, its ascii code is 10
                     let seq: Vec<u8> = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect();
-                    let seq_len = seqrec.seq().to_vec().iter().filter(|&x| *x != 10).cloned().collect::<Vec<_>>().len();
+                    let seq_len = seq.len();
                     Some((seq, seq_len))
                 } else {
                     None
                 }
             }
         } {
+            if iter_reads % step != 0 {
+                iter_reads += 1;
+                continue;
+            } else {
+                iter_reads += 1;
+            }
+
             let kmer_opt = SplitKmer::new(
                 seq,
                 seq_len,
@@ -231,6 +240,7 @@ impl SkaDict {
         rc: bool,
         qual: &QualOpts,
         file_type: &str,
+        proportion_reads: Option<f64>,
     ) -> Self {
         if !(5..=63).contains(&k) || k % 2 == 0 {
             panic!("Invalid k-mer length");
@@ -264,7 +274,7 @@ impl SkaDict {
         */
 
         // Build the dict
-        sk_dict.add_file_kmers(input_file, file_type);
+        sk_dict.add_file_kmers(input_file, file_type, proportion_reads);
 
         if sk_dict.ksize() == 0 {
             panic!("File has no valid sequence");
@@ -295,6 +305,11 @@ impl SkaDict {
     /// Split k-mer dictonary
     pub fn kmers(&self) -> &HashMap<u128, u8> {
         &self.split_kmers
+    }
+
+    /// Iter over the split k-mers
+    pub fn kmer_iter(&self) -> impl Iterator<Item = (&u128, &u8)> {
+        self.split_kmers.iter()
     }
 
     /// Sample name

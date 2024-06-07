@@ -7,7 +7,10 @@ pub mod ska_ref;
 use crate::ska_ref::RefSka;
 pub mod ska_dict;
 pub mod ska_map;
+pub mod ska_align;
+
 use crate::ska_map::SkaMap;
+use crate::ska_align::SkaAlign;
 
 use json;
 
@@ -53,13 +56,12 @@ pub struct SkaData {
 
 #[wasm_bindgen]
 impl SkaData {
-    pub fn new(ref_file: web_sys::File) -> Self {
+    pub fn new(ref_file: web_sys::File, k: usize) -> Self {
         if cfg!(debug_assertions) {
             init_panic_hook();
         }
 
-        let k = 31;
-        let rc = false;
+        let rc = true;
         let ambig_mask = false;
         let repeat_mask = false;
 
@@ -78,13 +80,16 @@ impl SkaData {
         }
     }
 
-    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>) -> String {
+    pub fn map(&mut self, input_file: web_sys::File, rev_reads: Option<web_sys::File>, proportion_reads: Option<f64>) -> String {
         if rev_reads.is_some() {
             log(&format!("Detected paired fastq input files"));
         }
         log(&format!("Mapping reads to reference"));
         let file_name = input_file.name();
-        let file_type = file_name.split('.').nth(1).unwrap();
+        let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
+        if file_type == "gz" { 
+            file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
+        }
         let mut wf1 = WebSysFile::new(input_file);
 
         if let Some(second_file) = rev_reads {
@@ -93,14 +98,15 @@ impl SkaData {
                 &mut wf1,
                 Some(&mut WebSysFile::new(second_file)),
                 file_type,
+                proportion_reads,
             ));
         } else {
             self.mapped
-                .push(SkaMap::new(&self.reference, &mut wf1, None, file_type));
+                .push(SkaMap::new(&self.reference, &mut wf1, None, file_type, proportion_reads));
         };
 
         log("Reads mapped successfully!");
-
+        
         let mut results = json::JsonValue::new_array();
 
         results["Mapped sequences"] = json::JsonValue::new_array();
@@ -156,4 +162,61 @@ pub fn reconstruct_sequence(reference: &RefSka) -> Vec<String> {
     }
 
     return sequence_string;
+}
+
+#[wasm_bindgen]
+pub struct AlignData {
+    alignment: SkaAlign,
+    file_names: Vec<String>,
+}
+
+#[wasm_bindgen]
+impl AlignData {
+    pub fn new(k: usize) -> Self {
+        Self {
+            alignment: SkaAlign::new(k),
+            file_names: Vec::new(),
+        }
+    }
+
+    pub fn align(&mut self, input_files: Vec<web_sys::File>, proportion_reads: Option<f64>) -> String {
+        log(&format!("Aligning reads"));
+
+        let mut wf1: WebSysFile;
+
+        for input_file in input_files {
+            let file_name = input_file.name();
+            self.file_names.push(file_name.clone().split('.').nth(0).unwrap().to_string());
+            let file_type = file_name.split('.').nth(1).unwrap();   
+            wf1 = WebSysFile::new(input_file);
+            
+            self.alignment.add_file(
+                &mut wf1,
+                file_type,
+                proportion_reads,
+            );
+        }
+
+        if self.alignment.get_size() <= 2 {
+            let mut results = json::JsonValue::new_array();
+            results["newick"] = "Not enough sequences to align".into();
+            results["names"] = json::JsonValue::new_array();
+            for name in &self.file_names {
+                let _ = results["names"].push(name.to_string());
+            }
+
+            return results.dump()
+        }
+
+        let newick = self.alignment.align(&self.file_names);
+
+        let mut results = json::JsonValue::new_array();
+
+        results["newick"] = newick.into();
+        results["names"] = json::JsonValue::new_array();
+            for name in &self.file_names {
+                let _ = results["names"].push(name.to_string());
+            }
+        results.dump()
+    }
 }

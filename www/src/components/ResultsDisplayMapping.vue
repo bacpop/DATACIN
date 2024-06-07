@@ -2,7 +2,7 @@
     <div v-if="queryProcessed" class="variants"> 
         <div id="band" style="height: 30px">
             <div v-if="filesUploaded" class="checkbox">
-                <input type="checkbox" id="visualisation" v-model="visualisation"/>
+                <input type="checkbox" id="visualisation" @click="reset_zoom" v-model="visualisation"/>
                 <label for="visualisation">See visualisation</label>
             </div>
             <div v-if="zoom>8 && visualisation" class="checkbox">
@@ -60,13 +60,13 @@
                 <SequenceViewer 
                     :zoom_level="zoom"
                     :no_skip="!skip"
-                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reload -->
                 </SequenceViewer>
             </div>
             <div v-else id="MinimisedViewer">
                 <MinimisedSequenceViewer 
                     :zoom_level="zoom"
-                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reloadr -->
+                    :key="use_keys([zoom, skip, reloadKey])"> <!-- Reactivity on zoom and skip changes and reload -->
                 </MinimisedSequenceViewer>
             </div>
         </div>
@@ -83,7 +83,7 @@ import Popper from "vue3-popper";
 import DownloadButton from "./SequenceViewer/DownloadButton.vue";
 
 export default {
-    name: "ResultsDisplay",
+    name: "ResultsDisplayMapping",
     components: {
         SequenceViewer,
         VueSlider,
@@ -95,11 +95,13 @@ export default {
         const { allResults } = useState(["allResults"]);
         const visualisation = ref(false);
         const skip = ref(true);
+        const zoom = ref(10);
 
         return {
             allResults,
             visualisation,
-            skip
+            skip,
+            zoom
         }
     },
 
@@ -107,8 +109,12 @@ export default {
         'allResults.mapResults': {
             handler() {
                 let last_key = Object.keys(this.allResults.mapResults)[Object.keys(this.allResults.mapResults).length-1]
-                if (this.allResults.mapResults[last_key].mapped_sequences.length !== 0){
+                if (this.allResults.mapResults[last_key]? this.allResults.mapResults[last_key].mapped_sequences.length !== 0: false){
                     this.reloadKey++;
+                }
+                else {
+                    this.zoom = 10;
+                    this.visualisation = false;
                 }
             },
             deep: true,
@@ -131,12 +137,14 @@ export default {
     methods: {
         use_keys(list_of_keys) {
             return list_of_keys.join('-');
+        },
+        reset_zoom() {
+            this.zoom = 10;
         }
     },
     
     data() {
         return {
-            zoom: 10,
             reloadKey: 0
         }
     },
@@ -156,7 +164,6 @@ export default {
 
 
   #band {
-    width: 100%;
     margin-left: 20px;
   }
 
@@ -185,7 +192,6 @@ export default {
   }
 
   #table {
-    width: 100%;
     float: left;
     text-align: left;
     margin-left: 50px;

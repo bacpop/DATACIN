@@ -9,8 +9,9 @@ export default {
         state.refSet = input.name;
         state.allResults.ref = input.sequences;
     },
-    addQueryFile(state: RootState, name: string) {
-        console.log("vuex: Adding query file " + name)
+
+    addQueryFileMap(state: RootState, name: string) {
+        console.log("vuex: Adding query file for mapping " + name)
         if (!state.allResults.mapResults[name]) {
             state.allResults.mapResults[name] = {
                 mapped: true,
@@ -27,4 +28,26 @@ export default {
         state.allResults.mapResults[input.name].coverage = input.coverage
         state.allResults.mapResults[input.name].mapped_sequences = input.mapped_sequences
     },
+
+    setAligned(state: RootState, input: {names:string[], newick:string}) {
+        state.allResults.alignResults[0] = {
+            aligned: true,
+            names: input.names,
+            newick: input.newick 
+        }
+    },
+
+
+    resetAllResults(state: RootState) {
+        state.refSet= null;
+        state.allResults= {
+            mapResults: {},
+            alignResults: {},
+            ref: [],
+        };
+
+        if (state.workerState.worker) {
+            state.workerState.worker.postMessage({reset: true});
+        }
+    }
 };
