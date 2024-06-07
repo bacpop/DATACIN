@@ -23,6 +23,7 @@ hashbrown = "0.12"
 getrandom = { version = "*", features = ["js"] }
 json = "0.12.4"
 rayon = "1.8"
+speedytree = "0.1.0"
 
 [dependencies.web-sys]
 version = "0.3"

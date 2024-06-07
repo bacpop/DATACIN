@@ -34,18 +34,20 @@
         </div>
 
         <div v-if="param">
-            <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
-                <input v-bind='getInputPropsRef()' />
-                <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
-                <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
-                    or click to select a file</p>
-            </div>
-            <div v-if="refProcessed" class="dropzone dropzone-ref">
-                <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
-            </div>
 
             <!-- Mapping tab -->
             <div v-if="tabName=='Mapping'">
+
+                <div v-if="!refProcessed" v-bind='getRootPropsRef()' class="dropzone dropzone-ref">
+                    <input v-bind='getInputPropsRef()' />
+                    <p v-if='isDragActiveRef' class="dropzone-text">Drop the files here ...</p>
+                    <p v-else class="dropzone-text">Drag and drop your <b>reference fasta file</b> here,
+                        or click to select a file</p>
+                </div>
+                <div v-if="refProcessed" class="dropzone dropzone-ref">
+                    <p class="dropzone-text">✅ Reference indexed: <span class="monospace">{{ refName }}</span></p>
+                </div>
+
                 <div v-if="refProcessed" v-bind='getRootPropsQueryMap()' class="dropzone dropzone-query">
                     <input v-bind='getInputPropsQueryMap()' />
                     <p v-if='isDragActiveQueryMap' class="dropzone-text">Drop the files here ...</p>
@@ -57,13 +59,13 @@
 
             <!-- Alignment tab -->
             <div v-else-if="tabName=='Alignment'">
-                <div v-if="refProcessed" v-bind='getRootPropsQueryAlign()' class="dropzone dropzone-query">
+                <div v-bind='getRootPropsQueryAlign()' class="dropzone dropzone-query">
                     <input v-bind='getInputPropsQueryAlign()' />
                     <p v-if='isDragActiveQueryAlign' class="dropzone-text">Drop the files here ...</p>
                     <p v-else class="dropzone-text">Drag and drop read or assembly <b>files to be aligned</b> here,
                         or click to select files</p>
                 </div>
-                <p v-if="refProcessed" class="count"> Files received: {{ Object.keys(allResults.alignResults).length }}</p>
+                <p class="count"> Files received: {{ allResults.alignResults[0]? allResults.alignResults[0].names.length : 0 }}</p>
             </div>
         </div>
     </div>
@@ -96,7 +98,7 @@ export default {
             processQueryMap({acceptFiles: acceptFiles, proportion_reads: proportion_reads.value});
         }
         function onDropQueryAlign(acceptFiles) {
-            processQueryAlign(acceptFiles);
+            processQueryAlign({acceptFiles: acceptFiles, k: k.value, proportion_reads: proportion_reads.value});
         }
         function resetAll() {
             param.value = false;

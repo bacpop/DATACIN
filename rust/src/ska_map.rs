@@ -14,7 +14,7 @@ pub struct Variant {
 
 #[derive(Debug, Clone, Default)]
 pub struct SkaMap {
-    /// Positions of mapped bases as (chrom, pos)
+    /// Positions of mapped bases as (chrom, pos, base)
     mapped_bases: Vec<Variant>,
 }
 
