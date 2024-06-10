@@ -186,8 +186,11 @@ impl AlignData {
 
         for input_file in input_files {
             let file_name = input_file.name();
-            self.file_names.push(file_name.clone().split('.').nth(0).unwrap().to_string());
-            let file_type = file_name.split('.').nth(1).unwrap();   
+            self.file_names.push(file_name.clone());
+            let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
+            if file_type == "gz" { 
+                file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
+            }    
             wf1 = WebSysFile::new(input_file);
             
             self.alignment.add_file(
