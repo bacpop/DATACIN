@@ -1,11 +1,11 @@
 <template>
-    <svg id="tree_container" style="height: 400px; width: 100%;"></svg>
+    <svg id="tree_container"></svg>
 </template>
 
 <script>
 import { useState } from "vuex-composition-helpers";
-import * as d3 from 'd3';
-import { NewickTools } from 'newick'
+import * as phylotree from "phylotree";
+import * as d3 from "d3";
 
 export default {
     name: "ResultsDisplayAlignment",
@@ -25,7 +25,7 @@ export default {
     watch: {
         'allResults.alignResults': {
             handler: function() {
-                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 1: false){
+                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 2: false){
                     this.createTree();
                 }
                 else {
@@ -41,10 +41,9 @@ export default {
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
-            // Create an SVG element
-            const svg = d3.select("#tree_container");
+            let container = d3.select("#tree_container");
 
-            svg.append("text")
+            container.append("text")
                 .attr("x", "50%")
                 .attr("y", 20)
                 .text("Not enough alignments to visualise a tree")
@@ -55,51 +54,21 @@ export default {
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
+            d3.select("#tree_container")
+                .attr("width", window.innerWidth * 0.9)
+                .attr("height", 400);
+
             let nwk = this.allResults.alignResults[0].newick;
-
-            const treeData = NewickTools.parse(nwk);
-
-            // Create a D3 tree layout
-            const cluster = d3.tree()
-                              .size([400, window.innerWidth - 400]);
-
-            // Create an SVG element
-            const svg = d3.select("#tree_container");
-            
-            let g = svg.append("g").attr("transform", "translate(40,0)");
-
-            const root = d3.hierarchy(treeData, d => d.branchset);
-
-            cluster(root);
-
-            // Links
-            g.selectAll(".link")
-             .data(root.descendants().slice(1))
-             .enter().append("path")
-             .attr("class", "link")
-             .attr("d", d => `
-                M${d.y},${d.x}
-                L${d.parent.y},${d.parent.x}`)
-            .attr("stroke", "black")
-
-            // Nodes
-            const node = g.selectAll(".node")
-                .data(root.descendants())
-                .enter().append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.y},${d.x})`);
-
-            node.append("circle")
-                .attr("r", 2.5);
-
-            node.append("text")
-                .attr("dy", 3)
-                .attr("x", d => d.children ? -8 : 8)
-                .style("text-anchor", d => d.children ? "end" : "start")
-                .text(d => d.data.name);
-
+            const tree = new phylotree.phylotree(nwk);
+            console.log(tree);
+            var rendered_tree = tree.render("#tree_container", {
+                height: 400,
+                width: window.innerWidth * 0.9,
+                "left-right-spacing": "fit-to-size",
+                "top-bottom-spacing": "fit-to-size"
+            });
+            console.log(rendered_tree);
         },
     },
-
 };
 </script>
