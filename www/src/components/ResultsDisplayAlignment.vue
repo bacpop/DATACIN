@@ -4,7 +4,7 @@
 
 <script>
 import { useState } from "vuex-composition-helpers";
-import * as phylotree from "phylotree";
+import { phylotree } from "phylotree";
 import * as d3 from "d3";
 
 export default {
@@ -38,6 +38,8 @@ export default {
 
     methods: { 
         notEnough() {
+            console.log("Not enough alignments to visualise a tree");
+
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
@@ -51,24 +53,38 @@ export default {
                 .attr("text-anchor", "middle");
         },
         createTree() {
+            console.log("Creating tree");
+
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
-            d3.select("#tree_container")
-                .attr("width", window.innerWidth * 0.9)
-                .attr("height", 400);
+            const container = document.getElementById("tree_container");
 
             let nwk = this.allResults.alignResults[0].newick;
-            const tree = new phylotree.phylotree(nwk);
-            console.log(tree);
-            var rendered_tree = tree.render("#tree_container", {
-                height: 400,
-                width: window.innerWidth * 0.9,
-                "left-right-spacing": "fit-to-size",
-                "top-bottom-spacing": "fit-to-size"
-            });
-            console.log(rendered_tree);
+
+            if (container) {
+                const tree = new phylotree(nwk);
+                var rendered_tree = tree.render({
+                    container: "#tree_container", 
+                    height: 400,
+                    width: window.innerWidth * 0.85,
+                    "left-right-spacing": "fit-to-size",
+                    "top-bottom-spacing": "fit-to-size"
+                });
+
+                // Append the SVG directly to the container
+                const svg = rendered_tree.show();
+                container.appendChild(svg);
+            }
         },
     },
 };
 </script>
+
+<style scoped>
+#tree_container {
+  margin: 20px;
+  min-height: 400px; /* Ensure it has some height */
+  width: 90%; /* Ensure it has some width */
+}
+</style>
