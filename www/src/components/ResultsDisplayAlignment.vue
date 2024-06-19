@@ -5,6 +5,7 @@
 <script>
 import { useState } from "vuex-composition-helpers";
 import { phylotree } from "phylotree";
+import 'phylotree/dist/phylotree.css';
 import * as d3 from "d3";
 
 export default {
