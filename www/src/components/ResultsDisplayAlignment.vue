@@ -32,6 +32,10 @@ export default {
     watch: {
         'allResults.alignResults': {
             handler: function() {
+                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].aligned == false: false){
+                    this.loading();
+                    return;
+                }
                 if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 2: false){
                     this.createTree();
                 }
@@ -59,6 +63,23 @@ export default {
                 .attr("font-size", "15px")
                 .attr("text-anchor", "middle");
         },
+
+        loading() {
+            console.log("Loading tree");
+
+            // Clear previous tree
+            d3.select("#tree_container").selectAll("*").remove();
+
+            let container = d3.select("#tree_container");
+
+            container.append("text")
+                .attr("x", "50%")
+                .attr("y", 40)
+                .text("Loading tree...")
+                .attr("font-size", "40px")
+                .attr("text-anchor", "middle");
+        },
+
         createTree() {
             console.log("Creating tree");
 
