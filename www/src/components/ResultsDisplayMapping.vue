@@ -162,11 +162,6 @@ export default {
     --popper-theme-padding: 5px;
   }
 
-
-  #band {
-    margin-left: 20px;
-  }
-
   .checkbox {
     float: left;
     text-align: left;

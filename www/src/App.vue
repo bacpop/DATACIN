@@ -10,10 +10,10 @@
         <DropZone 
             :tabName="tabName"
         />
-        <div v-if="tabName === 'Mapping'">
+        <div class="Display" v-if="tabName === 'Mapping'">
             <ResultsDisplayMapping />
         </div>
-        <div v-else-if="tabName === 'Alignment'">
+        <div class="Display" v-else-if="tabName === 'Alignment'">
             <ResultsDisplayAlignment />
         </div>
     </div>
@@ -99,6 +99,10 @@ export default {
 
 .tab:hover {
     background-color: #ddd;
+}
+
+.Display {
+    margin: 10px 10%;
 }
 
 </style>

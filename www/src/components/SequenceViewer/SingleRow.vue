@@ -29,10 +29,10 @@ export default {
                 for (let j = 0; j < nb_mapping; j++){
                     text_widths.push(getTextWidth(this.font_size, this.font_family, this.mapping_names[j]));
                 }
-                x = 20 + 1.1*Math.max(...text_widths) + font_widths[0]/2;
+                x = 1.1*Math.max(...text_widths) + font_widths[0]/2;
 
                 svg.append("text")
-                   .attr("x", 20)
+                   .attr("x", 0)
                    .attr("y", this.font_size)
                    .attr("font-size", this.font_size + "px")
                    .attr("text-anchor", "left")
@@ -41,7 +41,7 @@ export default {
                 
                 for (let j = 0; j < nb_mapping; j++){
                     svg.append("text")
-                       .attr("x", 20)
+                       .attr("x", 0)
                        .attr("y", (2 + j) * this.font_size)
                        .attr("font-size", this.font_size + "px")
                        .attr("fill", "red")
@@ -51,7 +51,7 @@ export default {
                 }
             }
             else {
-                x = 20 + font_widths[0]/2;
+                x = font_widths[0]/2;
             }
             const initial_x = x;
             const initial_font_width = font_widths[0];

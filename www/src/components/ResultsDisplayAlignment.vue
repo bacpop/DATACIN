@@ -23,6 +23,12 @@ export default {
         msg: String
     },
 
+    mounted() {
+        if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 2: false){
+            this.createTree();
+        }
+    },
+
     watch: {
         'allResults.alignResults': {
             handler: function() {
@@ -68,7 +74,7 @@ export default {
                 var rendered_tree = tree.render({
                     container: "#tree_container", 
                     height: 400,
-                    width: window.innerWidth * 0.85,
+                    width: window.innerWidth,
                     "left-right-spacing": "fit-to-size",
                     "top-bottom-spacing": "fit-to-size"
                 });
@@ -84,8 +90,7 @@ export default {
 
 <style scoped>
 #tree_container {
-  margin: 20px;
   min-height: 400px; /* Ensure it has some height */
-  width: 90%; /* Ensure it has some width */
+  width: 100%; /* Ensure it has some width */
 }
 </style>
