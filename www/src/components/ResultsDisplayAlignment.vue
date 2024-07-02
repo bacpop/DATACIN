@@ -1,11 +1,12 @@
 <template>
-    <svg id="tree_container" style="height: 400px; width: 100%;"></svg>
+    <svg id="tree_container"></svg>
 </template>
 
 <script>
 import { useState } from "vuex-composition-helpers";
-import * as d3 from 'd3';
-import { NewickTools } from 'newick'
+import { phylotree } from "phylotree";
+import 'phylotree/dist/phylotree.css';
+import * as d3 from "d3";
 
 export default {
     name: "ResultsDisplayAlignment",
@@ -22,10 +23,20 @@ export default {
         msg: String
     },
 
+    mounted() {
+        if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 2: false){
+            this.createTree();
+        }
+    },
+
     watch: {
         'allResults.alignResults': {
             handler: function() {
-                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 1: false){
+                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].aligned == false: false){
+                    this.loading();
+                    return;
+                }
+                if (this.allResults.alignResults[0]? this.allResults.alignResults[0].names.length > 2: false){
                     this.createTree();
                 }
                 else {
@@ -38,68 +49,69 @@ export default {
 
     methods: { 
         notEnough() {
+            console.log("Not enough alignments to visualise a tree");
+
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
-            // Create an SVG element
-            const svg = d3.select("#tree_container");
+            let container = d3.select("#tree_container");
 
-            svg.append("text")
+            container.append("text")
                 .attr("x", "50%")
                 .attr("y", 20)
                 .text("Not enough alignments to visualise a tree")
                 .attr("font-size", "15px")
                 .attr("text-anchor", "middle");
         },
-        createTree() {
+
+        loading() {
+            console.log("Loading tree");
+
             // Clear previous tree
             d3.select("#tree_container").selectAll("*").remove();
 
+            let container = d3.select("#tree_container");
+
+            container.append("text")
+                .attr("x", "50%")
+                .attr("y", 40)
+                .text("Loading tree...")
+                .attr("font-size", "40px")
+                .attr("text-anchor", "middle");
+        },
+
+        createTree() {
+            console.log("Creating tree");
+
+            // Clear previous tree
+            d3.select("#tree_container").selectAll("*").remove();
+
+            const container = document.getElementById("tree_container");
+
             let nwk = this.allResults.alignResults[0].newick;
 
-            const treeData = NewickTools.parse(nwk);
+            if (container) {
+                const tree = new phylotree(nwk);
+                var rendered_tree = tree.render({
+                    container: "#tree_container", 
+                    height: 400,
+                    width: window.innerWidth,
+                    "left-right-spacing": "fit-to-size",
+                    "top-bottom-spacing": "fit-to-size"
+                });
 
-            // Create a D3 tree layout
-            const cluster = d3.tree()
-                              .size([400, window.innerWidth - 400]);
-
-            // Create an SVG element
-            const svg = d3.select("#tree_container");
-            
-            let g = svg.append("g").attr("transform", "translate(40,0)");
-
-            const root = d3.hierarchy(treeData, d => d.branchset);
-
-            cluster(root);
-
-            // Links
-            g.selectAll(".link")
-             .data(root.descendants().slice(1))
-             .enter().append("path")
-             .attr("class", "link")
-             .attr("d", d => `
-                M${d.y},${d.x}
-                L${d.parent.y},${d.parent.x}`)
-            .attr("stroke", "black")
-
-            // Nodes
-            const node = g.selectAll(".node")
-                .data(root.descendants())
-                .enter().append("g")
-                .attr("class", "node")
-                .attr("transform", d => `translate(${d.y},${d.x})`);
-
-            node.append("circle")
-                .attr("r", 2.5);
-
-            node.append("text")
-                .attr("dy", 3)
-                .attr("x", d => d.children ? -8 : 8)
-                .style("text-anchor", d => d.children ? "end" : "start")
-                .text(d => d.data.name);
-
+                // Append the SVG directly to the container
+                const svg = rendered_tree.show();
+                container.appendChild(svg);
+            }
         },
     },
-
 };
 </script>
+
+<style scoped>
+#tree_container {
+  min-height: 400px; /* Ensure it has some height */
+  width: 100%; /* Ensure it has some width */
+}
+</style>

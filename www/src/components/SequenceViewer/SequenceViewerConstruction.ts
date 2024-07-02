@@ -31,7 +31,7 @@ export function Rows(
     {
     const nb_mapping = whole_mapped_sequences_chrom[0].length;
 
-    const width_page = document.body.clientWidth - 20;
+    const width_page = 0.8*document.body.clientWidth;
 
     let sequence: string[];
     let mapped_sequences: string[][];

@@ -54,9 +54,11 @@ export class Mapper {
 
         let results = JSON.parse(this.AlignData.align(files, proportion_reads));
 
-        this.worker.postMessage({ names: results["names"],
-                                  newick: results["newick"],
-                                });
+        this.worker.postMessage({ 
+            aligned: true,
+            names: results["names"],
+            newick: results["newick"],
+        });
     }
 
     resetAll() {

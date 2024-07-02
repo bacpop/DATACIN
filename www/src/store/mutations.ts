@@ -29,9 +29,9 @@ export default {
         state.allResults.mapResults[input.name].mapped_sequences = input.mapped_sequences
     },
 
-    setAligned(state: RootState, input: {names:string[], newick:string}) {
+    setAligned(state: RootState, input: {aligned:boolean, names:string[], newick:string}) {
         state.allResults.alignResults[0] = {
-            aligned: true,
+            aligned: input.aligned,
             names: input.names,
             newick: input.newick 
         }

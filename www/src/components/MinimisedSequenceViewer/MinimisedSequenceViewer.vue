@@ -47,7 +47,7 @@ export default {
             }
             const nb_chrom = whole_sequences.length;
 
-            const width = document.body.clientWidth - 20;
+            const width = d3.select("#parent").node().getBoundingClientRect().width;
             // totalWidth is made to be width when zoom_level is 0 and 
             // to give 1px for each nucleotide when zoom_level is maximum (8).
             const totalWidth = width * Math.exp(1/8 * this.zoom_level * Math.log(length_sequence/width));
@@ -89,7 +89,7 @@ export default {
 
             for (let i = 0; i < nb_mapping; i++) {
                 legend.append("text")
-                    .attr("x", 10)
+                    .attr("x", "10%")
                     .attr("y", y(i) + 30 - (height - marginBottom - marginTop) / nb_mapping / 2)
                     .attr("text-anchor", "left")
                     .attr("alignment-baseline", "middle")
