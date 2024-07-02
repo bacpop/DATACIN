@@ -120,7 +120,7 @@ impl SkaDict {
             panic!("Unsupported file type")
         }
 
-        let step = (1 as f64 / proportion_reads.unwrap()).round() as usize;
+        let step = 1 as f64 / proportion_reads.unwrap();
 
         let mut iter_reads = 0;
         while let Some((seq, seq_len)) = match reader {
@@ -147,7 +147,7 @@ impl SkaDict {
                 }
             }
         } {
-            if iter_reads % step != 0 {
+            if (iter_reads as f64 % step) as i32 != 0 {
                 iter_reads += 1;
                 continue;
             } else {
