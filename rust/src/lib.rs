@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_file_reader::WebSysFile;
 extern crate console_error_panic_hook;
@@ -8,9 +10,14 @@ use crate::ska_ref::RefSka;
 pub mod ska_dict;
 pub mod ska_map;
 pub mod ska_align;
+pub mod merge_ska_dict;
+pub mod merge_ska_array;
 
 use crate::ska_map::SkaMap;
 use crate::ska_align::SkaAlign;
+
+use crate::merge_ska_dict::build_and_merge;
+use crate::merge_ska_array::MergeSkaArray;
 
 use json;
 
@@ -85,7 +92,7 @@ impl SkaData {
             log(&format!("Detected paired fastq input files"));
         }
         log(&format!("Mapping reads to reference"));
-        let file_name = input_file.name();
+        let file_name = input_file.name().clone();
         let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
         if file_type == "gz" { 
             file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
@@ -167,7 +174,7 @@ pub fn reconstruct_sequence(reference: &RefSka) -> Vec<String> {
 #[wasm_bindgen]
 pub struct AlignData {
     alignment: SkaAlign,
-    file_names: Vec<String>,
+    //file_names: Vec<String>,
 }
 
 #[wasm_bindgen]
@@ -175,51 +182,97 @@ impl AlignData {
     pub fn new(k: usize) -> Self {
         Self {
             alignment: SkaAlign::new(k),
-            file_names: Vec::new(),
+            //file_names: Vec::new(),
         }
     }
 
-    pub fn align(&mut self, input_files: Vec<web_sys::File>, proportion_reads: Option<f64>) -> String {
-        log(&format!("Aligning reads"));
+    pub fn align(&mut self, input_files: Vec<web_sys::File>, proportion_reads: Option<f64>, k: usize) -> String {
+        
+        let rc = true;
+        let mut file_names = Vec::new();
+        let mut file_types = Vec::new();
 
-        let mut wf1: WebSysFile;
-
-        for input_file in input_files {
+        for input_file in &input_files {
             let file_name = input_file.name();
-            self.file_names.push(file_name.clone());
-            let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
+            file_names.push(file_name.clone());
+            // self.file_names.push(file_name.clone());
+            let mut file_type: String = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap().to_string();
             if file_type == "gz" { 
-                file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
-            }    
-            wf1 = WebSysFile::new(input_file);
+                file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap().to_string();
+            }
+            file_types.push(file_type.clone());
+
+
+        }
+
+        let merge_dict = build_and_merge(
+            input_files,
+            k, 
+            rc, 
+            file_types, 
+            proportion_reads);
+
+        let merge_ska_array = MergeSkaArray::new(&merge_dict);
+
+        let result = merge_ska_array.distance(10.0);
+
+        log(format!("Result: {:?}", result).as_str());
+
+        return "".to_string();
+
+        // let result = merge_ska_array.distance(0.0);
+
+        // let mut result_string = json::JsonValue::new_array();
+        
+        // for i in 0..result.len() {
+        //     let mut current_result = json::JsonValue::new_array();
+        //     for j in 0..result[i].len() {
+        //         current_result.push(result[i][j].0);
+        //         current_result.push(result[i][j].1);
+        //     }
+        //     result_string.push(current_result);
+        // }
+
+        // return result_string.dump();
+
+        // let mut wf1: WebSysFile;
+
+        // for input_file in input_files {
+        //     let file_name = input_file.name();
+        //     self.file_names.push(file_name.clone());
+        //     let mut file_type = file_name.split('.').nth(file_name.split('.').count() - 1).unwrap();
+        //     if file_type == "gz" { 
+        //         file_type = file_name.split('.').nth(file_name.split('.').count() - 2).unwrap();
+        //     }    
+        //     wf1 = WebSysFile::new(input_file);
             
-            self.alignment.add_file(
-                &mut wf1,
-                file_type,
-                proportion_reads,
-            );
-        }
+        //     self.alignment.add_file(
+        //         &mut wf1,
+        //         file_type,
+        //         proportion_reads,
+        //     );
+        // }
 
-        if self.alignment.get_size() <= 2 {
-            let mut results = json::JsonValue::new_array();
-            results["newick"] = "Not enough sequences to align".into();
-            results["names"] = json::JsonValue::new_array();
-            for name in &self.file_names {
-                let _ = results["names"].push(name.to_string());
-            }
+        // if self.alignment.get_size() <= 2 {
+        //     let mut results = json::JsonValue::new_array();
+        //     results["newick"] = "Not enough sequences to align".into();
+        //     results["names"] = json::JsonValue::new_array();
+        //     for name in &self.file_names {
+        //         let _ = results["names"].push(name.to_string());
+        //     }
 
-            return results.dump()
-        }
+        //     return results.dump()
+        // }
 
-        let newick = self.alignment.align(&self.file_names);
+        // let newick = self.alignment.align(&self.file_names);
 
-        let mut results = json::JsonValue::new_array();
+        // let mut results = json::JsonValue::new_array();
 
-        results["newick"] = newick.into();
-        results["names"] = json::JsonValue::new_array();
-            for name in &self.file_names {
-                let _ = results["names"].push(name.to_string());
-            }
-        results.dump()
+        // results["newick"] = newick.into();
+        // results["names"] = json::JsonValue::new_array();
+        //     for name in &self.file_names {
+        //         let _ = results["names"].push(name.to_string());
+        //     }
+        // results.dump()
     }
 }

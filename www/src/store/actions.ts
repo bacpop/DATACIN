@@ -66,7 +66,7 @@ export default {
         //Initialize the aligned state so that we can know that it is loading
         commit("setAligned", {aligned:false, names: [], newick: ""})
 
-        const messageData = { align: true, files: payload.acceptFiles, k: payload.k, proportion_reads: payload.proportion_reads};
+        const messageData = { align: true, files: payload.acceptFiles, k: payload.k, proportion_reads: payload.proportion_reads };
         
         if (state.workerState.worker) {
             state.workerState.worker.postMessage(messageData);

@@ -49,7 +49,11 @@ impl SkaAlign {
 
         for i in 0..self.queries_ska.len() {
             phylip_format += format!("{}\t", file_names[i]).as_str();
-            for j in 0..self.queries_ska.len() { // Do it on only half of the matrix
+            for j in 0..i {
+                pairwise_distances[i][j] = pairwise_distances[j][i];
+                phylip_format += format!("{}\t", pairwise_distances[i][j]).as_str();
+            }
+            for j in i..self.queries_ska.len() {
                 for ref_kmer in self.queries_ska[i].kmer_iter() {
                     if let Some(kmer_match) = self.queries_ska[j].kmers().get(&ref_kmer.0) {
                         if *kmer_match != *ref_kmer.1 {

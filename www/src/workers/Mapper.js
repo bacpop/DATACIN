@@ -52,7 +52,7 @@ export class Mapper {
             this.AlignData = this.wasm.AlignData.new(k);
         }
 
-        let results = JSON.parse(this.AlignData.align(files, proportion_reads));
+        let results = JSON.parse(this.AlignData.align(files, proportion_reads, k));
 
         this.worker.postMessage({ 
             aligned: true,
